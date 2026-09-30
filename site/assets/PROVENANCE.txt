@@ -1,0 +1,35 @@
+Tirzahs Mexi-Terranean Grill, unofficial website concept: asset provenance
+===========================================================================
+Every photo and the hero video on this page were generated with Higgsfield on 2026-09-29.
+Each one carries a visible "Concept image" or "Concept video" label on the page.
+No Yelp, press, or customer photos are used. Dish images show the ingredients in each dish's
+Yelp menu description. Full prompts and job ids for the dish and section images:
+photos/generated/PROVENANCE.md in the project folder.
+
+Hero video (hero-scrub.mp4, poster, ending frame)
+  model: seedance_2_5   job: 843d4c3c-31b1-4a78-863e-69d92d8b0623
+  prompt: One continuous shot, no cuts. The camera cranes slowly and steadily straight down, from open blue afternoon sky, past two strings of colorful papel picado banners that ripple and flutter in a light breeze, down over the ...
+
+Tall sky-to-counter photo (hero-tall-*.webp; source of the video's ending frame)
+  model: gpt_image_2_5   job: 6318f1b4-76bb-4068-9d0d-687722f6614b
+  prompt: Tall vertical photograph of a small red walk-up food stand in Los Angeles on a bright afternoon, seen straight-on from the sidewalk, one continuous scene from sky down to counter. Top of the frame: clear blue sky with a ...
+
+Video start frame (sky edit of the tall photo's top)
+  model: gpt_image_2_5   job: a9d06575-04c7-438c-9142-367a810a2633
+  prompt: The same scene as the reference photo, with the camera tilted a little higher. Most of the frame is open clear blue Los Angeles afternoon sky with a few soft white clouds, and the leafy magnolia branch reaching in from t...
+
+Seam slider, Mexican side (seam-mex-*.webp)
+  model: nano_banana_pro   job: bb78634b-c167-4a05-af08-61b987ee49be
+  prompt: Edit this photo: the whole counter now holds only Mexican food. On the left keep the queso birria tacos in the checkered paper tray and the cup of esquite. On the right, replace the kebab bowl with two super street tacos...
+
+Seam slider, Mediterranean side (seam-med-*.webp)
+  model: nano_banana_pro   job: 6ea75532-e0a1-4d96-8f2f-73f04a92c7c7
+  prompt: Edit this photo: the whole counter now holds only Mediterranean food. On the right keep the kebab bowl with basmati rice, hummus, cucumber salad and pink pickled onions. On the left, replace the tacos and the esquite wit...
+
+Dish, drink, sides, extras, soda, pop-up, window-counter, papel-picado, and brick images:
+  model: gpt_image_2_5 (quality high, 2k; hero window at 4k). See photos/generated/PROVENANCE.md.
+
+Icons: Solar icon set (CC BY 4.0) via the Iconify API, inlined in assets/js/icons.js.
+Fonts: Bricolage Grotesque, Instrument Sans, DM Mono (Google Fonts, SIL OFL).
+Libraries: GSAP 3.12.5 + ScrollTrigger (GSAP standard license), Lenis 1.1.13 (MIT), loaded from jsDelivr.
+Business facts: Tirzahs' Yelp listing, menu, Q&A, and health page, read 2026-09-29.

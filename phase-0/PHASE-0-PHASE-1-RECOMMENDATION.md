@@ -10,7 +10,7 @@ Build Phase 1 as a **single-page React + Vite + TypeScript** site in `~/Document
 - The WebGL piece is isolated in one component so it can be cut if the kill criterion trips.
 
 ## Sequence
-1. Get answers to Q1–Q6 ([PHASE-0-OWNER-CONFIRMATION.md](PHASE-0-OWNER-CONFIRMATION.md)).
+1. ~~Get answers to Q1–Q6~~ Done 2026-09-29: use everything from Yelp ([PHASE-0-OWNER-CONFIRMATION.md](PHASE-0-OWNER-CONFIRMATION.md)).
 2. Approve generation budget: minimum 9 images ([PHASE-0-ASSET-MANIFEST.md](PHASE-0-ASSET-MANIFEST.md)).
 3. Generate H1 first and check the concept; then cutouts, then textures.
 4. Scaffold the site; build static, no-JS-complete HTML/CSS first.
@@ -24,8 +24,8 @@ Build Phase 1 as a **single-page React + Vite + TypeScript** site in `~/Document
 | Hero canvas hurts performance | DPR cap, offscreen pause, kill criterion, poster fallback |
 | Pinned Seam section is fragile on mobile | Not pinned on mobile; tested at 390 px |
 | Brand collision with real signage | Nothing copied; invented window; typographic placeholder |
-| Stale facts (hours, menu) | Dated footnote; Yelp remains the source; owner list |
+| Stale facts (hours, menu, prices, rating, health grade) | Every time-bound figure carries its date; Yelp remains the source; re-check Yelp before showing anyone |
 | Reputation risk of an unofficial mockup | Private, `noindex`, footer disclaimer, never published without an explicit ask |
 
 ## Not in Phase 1
-Deployment, custom domain, ordering, analytics, CMS, reviews, social embeds.
+Deployment, custom domain, built-in ordering (the site only links to Yelp), analytics, CMS, review widgets, social embeds.

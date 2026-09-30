@@ -1,0 +1,23 @@
+[
+  {
+    "created_at": "2026-09-30T05:27:12.467654Z",
+    "display_name": "GPT Image 2.5",
+    "id": "7d00dcca-c68d-4108-bceb-99e3abf9387b",
+    "job_type": "gpt_image_2_5",
+    "min_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_052712_7d00dcca-c68d-4108-bceb-99e3abf9387b_min.webp",
+    "params": {
+      "aspect_ratio": "4:5",
+      "height": 2240,
+      "medias": [],
+      "model": "flare",
+      "prompt": "Photorealistic restaurant menu food photograph, 3/4 angle from slightly above. Loaded fries in a paper food tray lined with green-and-white checkered paper: a generous pile of golden, crisp french fries topped with chopped grilled carne asada, melted cheddar cheese, a scoop of chunky guacamole, fresh pico de gallo, and drizzles of orange chipotle aioli and sour cream. The food sits on the red-painted wooden counter of a walk-up food stand in Los Angeles. Bright natural afternoon sunlight with crisp soft shadows, 50mm lens, shallow depth of field; background softly blurred warm red and brick tones with a hint of colorful cut-paper banners. Tack-sharp focus, true-to-life textures and natural color, appetizing, real street-food look, not over-styled. No text, no logos, no labels, no people, no hands.",
+      "quality": "high",
+      "reference_elements": [],
+      "remove_bg": false,
+      "resolution": "2k",
+      "width": 1792
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_052712_7d00dcca-c68d-4108-bceb-99e3abf9387b.png",
+    "status": "completed"
+  }
+]

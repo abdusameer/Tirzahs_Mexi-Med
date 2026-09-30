@@ -1,0 +1,24 @@
+[
+  {
+    "created_at": "2026-09-30T05:45:24.457054Z",
+    "display_name": "GPT Image 2.5",
+    "id": "44be9d8a-e973-45f5-9184-874ebb6a4db0",
+    "job_type": "gpt_image_2_5",
+    "min_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_054524_44be9d8a-e973-45f5-9184-874ebb6a4db0_min.webp",
+    "params": {
+      "aspect_ratio": "21:9",
+      "background": "transparent",
+      "height": 1152,
+      "medias": [],
+      "model": "flare",
+      "prompt": "A single horizontal string of hanging papel picado banners: eight rectangular cut tissue-paper flags in magenta, turquoise, sunflower yellow, lime green, orange and lavender, each with intricate cut-out floral and geometric patterns, hanging from one thin white string with a slight natural drape. Soft even daylight, crisp paper edges, photographic. No letters, no words, no skulls, no faces. Isolated on a fully transparent background.",
+      "quality": "high",
+      "reference_elements": [],
+      "remove_bg": false,
+      "resolution": "2k",
+      "width": 2688
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_054524_44be9d8a-e973-45f5-9184-874ebb6a4db0.png",
+    "status": "completed"
+  }
+]

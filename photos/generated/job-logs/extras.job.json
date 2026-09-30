@@ -1,0 +1,23 @@
+[
+  {
+    "created_at": "2026-09-30T05:12:27.724024Z",
+    "display_name": "GPT Image 2.5",
+    "id": "e1dac742-14b6-4f88-8bf7-b4a04b118b26",
+    "job_type": "gpt_image_2_5",
+    "min_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_051227_e1dac742-14b6-4f88-8bf7-b4a04b118b26_min.webp",
+    "params": {
+      "aspect_ratio": "4:5",
+      "height": 2240,
+      "medias": [],
+      "model": "flare",
+      "prompt": "Photorealistic restaurant menu food photograph, overhead view. Six small clear 2-ounce portion cups arranged in a neat row: chunky guacamole, white garlic sauce, tzatziki with cucumber, fresh pico de gallo, orange chipotle aioli, and bright pink pickled red onions. The food sits on the red-painted wooden counter of a walk-up food stand in Los Angeles. Bright natural afternoon sunlight with crisp soft shadows, 50mm lens, shallow depth of field; background softly blurred warm red and brick tones with a hint of colorful cut-paper banners. Tack-sharp focus, true-to-life textures and natural color, appetizing but not over-styled. No text, no logos, no labels, no people, no hands.",
+      "quality": "high",
+      "reference_elements": [],
+      "remove_bg": false,
+      "resolution": "2k",
+      "width": 1792
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_051227_e1dac742-14b6-4f88-8bf7-b4a04b118b26.png",
+    "status": "completed"
+  }
+]

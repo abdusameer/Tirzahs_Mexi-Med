@@ -2,3 +2,12 @@
 node_modules/
 dist/
 .claude/
+
+# raw generations, review frames and QA screenshots (never ship, never commit)
+review/
+qa/out/
+# Yelp thumbnails saved for reference only (customer photos, not ours to publish)
+photos/*.jpg
+# raw 2k/4k Higgsfield PNGs stay local (web copies ship in site/assets/img; prompts in PROVENANCE.md)
+photos/generated/*.png
+photos/generated/old/

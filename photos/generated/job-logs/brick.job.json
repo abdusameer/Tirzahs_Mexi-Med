@@ -1,0 +1,23 @@
+[
+  {
+    "created_at": "2026-09-30T05:45:24.432938Z",
+    "display_name": "GPT Image 2.5",
+    "id": "e3583c32-dc1a-4bb5-8dad-a3f7a6cadf65",
+    "job_type": "gpt_image_2_5",
+    "min_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_054524_e3583c32-dc1a-4bb5-8dad-a3f7a6cadf65_min.webp",
+    "params": {
+      "aspect_ratio": "1:1",
+      "height": 2048,
+      "medias": [],
+      "model": "flare",
+      "prompt": "Flat, straight-on, evenly lit photographic texture of a painted-over street-food stand brick wall: warm brown and red-brown bricks with slight color variation, running bond pattern, light gray mortar joints, subtle weathering and scuffs. The bricks fill the entire frame edge to edge. No perspective, no vignette, no cast shadows, no objects, no text. Seamless tileable texture.",
+      "quality": "high",
+      "reference_elements": [],
+      "remove_bg": false,
+      "resolution": "2k",
+      "width": 2048
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3JHxX1zcBmn0y6Z4phVmSSseECc/hf_20260930_054524_e3583c32-dc1a-4bb5-8dad-a3f7a6cadf65.png",
+    "status": "completed"
+  }
+]

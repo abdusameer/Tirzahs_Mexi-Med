@@ -35,7 +35,7 @@ Rules: one display size per section; italics never; ingredient lines set in mono
 
 ## 4. Color system
 
-Sampled by eye from the Yelp exterior photos; **verify against the real building in Phase 1**.
+Sampled by eye from the Yelp exterior photos, then checked against the user's photos of the stand (2026-09-29): bright red textured stucco, red wooden counter shelf on red brackets, **brown** brick base with light mortar (not red tile), white-framed sliding windows, terracotta tile roof, blue and red shade awnings, multicolor papel picado. `--window-red` matches; `--brick` should lean browner when the build starts.
 
 | Token | Hex | Use |
 | --- | --- | --- |
@@ -51,13 +51,13 @@ Contrast: `--char` on `--pita` ≈ 14:1; white on `--window-red` ≈ 5.4:1 (larg
 
 ## 5. Section sequence
 
-1. **Hero — The Window.** Message, two CTAs, generated plate in the window.
-2. **Manifesto.** One paragraph of Tier-A-derived copy, masked word reveal.
+1. **Hero — The Window.** Message, Order on Yelp + See the menu CTAs, dated Yelp rating chip, hours chip, generated plate in the window.
+2. **Manifesto.** One paragraph of Yelp-sourced copy, masked word reveal.
 3. **The Seam (pinned).** Scroll splits the screen: Mexican staples left, Mediterranean right, meeting on the menu's shared dishes (El Arabic Taco, Egyptian Nachos).
-4. **The Menu.** Five chapters (Starters, Tacos, Burritos, House Specialties, Salads) as ticket-style cards; ingredients from the Yelp menu; no prices (Owner list Q3).
+4. **The Menu.** Five chapters (Starters, Tacos, Burritos, House Specialties, Salads) as ticket-style cards with Yelp ingredients and prices; "Most reviewed on Yelp" tags; choice-of-meat note; aguas frescas flavors; dated footnote.
 5. **Plates to know.** Four featured plates as cutouts on color fields: Egyptian Nachos, Sopes Plate, LA Kebab, Yalla Bowl.
-6. **Around the window.** Facts only: outdoor seating, dogs allowed, private lot, wheelchair accessible, takeout, delivery, catering.
-7. **Visit.** Dark chapter. Address, hours table, directions link.
+6. **Around the window.** Yelp amenities (yes only), Latinx-owned · Women-owned badges, dated health grade A, patio and delivery lines.
+7. **Visit.** Dark chapter. Address, El Sereno, hours table, tap-to-call phone, parking tip, directions link.
 8. **Final CTA + footer.** "Unofficial website concept" line; Yelp source credit.
 
 Storyboards are described in [PHASE-0-STORYBOARD.md](PHASE-0-STORYBOARD.md).

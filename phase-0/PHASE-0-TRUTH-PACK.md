@@ -3,127 +3,153 @@
 **Project:** The Walk-Up Window (internal working name, not a public tagline)
 **Subject:** Tirzahs Mexi-Terranean Grill, Los Angeles (El Sereno)
 **Status:** Unofficial private concept. The business has not commissioned, reviewed, or approved this work. No relationship exists. Do not publish, index, or present as official.
-**Compiled:** 2026-09-29
-**Primary source:** https://www.yelp.com/biz/tirzahs-mexi-terranean-grill-los-angeles (read live in the in-app browser on 2026-09-29; Yelp's device check cleared on its own, nothing was bypassed). Menu: https://www.yelp.com/menu/tirzahs-mexi-terranean-grill-los-angeles
+**Compiled:** 2026-09-29 · **Re-verified:** 2026-09-29, second full pass (log at the end)
 
-Every line of site copy must trace to Tier A, be visibly marked provisional (Tier B), or wait for owner confirmation (Tier C).
+**Source rule (user decision, 2026-09-29):** Yelp is the source of truth and is treated as correct. Everything on the listing, menu, Q&A, and health page, and the concrete facts in reviews, may be used on the concept as plain fact. Sources outside Yelp stay held.
+
+Yelp pages read live in the in-app browser (Yelp's device check cleared on its own; nothing was bypassed):
+- Listing: https://www.yelp.com/biz/tirzahs-mexi-terranean-grill-los-angeles
+- Menu: https://www.yelp.com/menu/tirzahs-mexi-terranean-grill-los-angeles
+- Q&A: https://www.yelp.com/questions/tirzahs-mexi-terranean-grill-los-angeles
+- Health score: https://www.yelp.com/inspections/tirzahs-mexi-terranean-grill-los-angeles
 
 | Tier | Source | On the concept site? |
 | --- | --- | --- |
-| **A — Yelp listing** | Business info, hours, attributes, menu as shown on Yelp | Yes, as plain fact (see "held" flags) |
-| **B — Customer-reported** | Statements found only inside Yelp reviews | Only as a labeled *sample*, never as an official promise |
-| **C — Found elsewhere** | Press and web pages, not on Yelp | No. Held for owner confirmation |
+| **A — Yelp listing** | Listing, menu, amenities, health page, Yelp-computed data | Yes, as plain fact |
+| **B — Yelp reviews and Q&A** | Customer-reported | Yes, concrete facts stated plainly. Opinions ("best", "pricey", "amazing") are not facts and are not used. No reviewer names, quotes, or photos |
+| **C — Found outside Yelp** | Press and web pages | No. Held |
 
 ---
 
-## Tier A — Verified listing facts
+## Tier A — Yelp listing
 
-| Field | Value |
-| --- | --- |
-| Business name (Yelp) | Tirzahs Mexi-Terranean Grill |
-| Categories | Food Stands · Mexican · Mediterranean |
-| Price band | $$ (Yelp) |
-| Address | 4625 Valley Blvd, Los Angeles, CA 90032 |
-| Neighborhood | El Sereno |
-| Phone | (323) 612-6062 (shown on Yelp) — **held**, see Owner list Q4 |
-| Hours | Mon–Fri 11:00 AM–7:00 PM · **Sat closed** · Sun 11:00 AM–2:00 PM |
-| Yelp status | Claimed |
-| Yelp rating (snapshot) | 4.8 from 221 reviews on 2026-09-29 — **not used on site**; changes over time and needs a live source |
-| Health score (snapshot) | "A" on Yelp — **not used on site**; time-bound claim |
+| Field | Value | On site |
+| --- | --- | --- |
+| Business name | Tirzahs Mexi-Terranean Grill | Yes. This spelling wins over "Tirzah's" |
+| Categories | Food Stands · Mexican · Mediterranean | Yes |
+| Price band | $$ | Yes |
+| Address | 4625 Valley Blvd, Los Angeles, CA 90032 | Yes |
+| Neighborhood | El Sereno | Yes, visible |
+| Phone | (323) 612-6062 | Yes, tap-to-call `tel:+13236126062` |
+| Hours | Mon–Fri 11:00 AM–7:00 PM · Sat closed · Sun 11:00 AM–2:00 PM (Yelp: "Updated 2 weeks ago") | Yes |
+| Yelp status | Claimed | Not needed |
+| Rating | 4.8 stars, 221 reviews (read 2026-09-29) | Yes, with the date and a link to the listing |
+| Health grade | A, routine inspection July 29, 2026 (previous: A, June 24, 2024) | Yes, with the inspection date |
+| Ordering | Yelp's own "Order takeout or delivery" button (a Yelp button, no outside provider named) | Yes: "Order on Yelp" links to the listing |
+| Official website | None listed | — |
+| Social accounts | None listed | — |
 
-**Yelp "About" (paraphrased, not quoted):** A fusion of Mexican and Mediterranean cuisine, with generous portions and flavors meant to bring people back.
+**Yelp "About the Business" (Specialties, paraphrased):** A fusion of Mexican and Mediterranean cooking, with big portions and flavors meant to bring people back. The About section has no history or owner entry.
 
-### Amenities — ticked on Yelp
-Offers takeout · Offers delivery · Offers catering · Outdoor seating · Dogs allowed · Private lot parking · Bike parking · Wheelchair accessible · Vegan options · Limited vegetarian options · Accepts credit cards, Apple Pay, Android Pay · Tipping optional · "Classy" (Yelp vibe tag) · Open to All
+### Amenities: yes on Yelp
+Offers delivery · Offers take-out · Offers catering · Outdoor seating · Dogs allowed · Private lot parking · Bike parking · Wheelchair accessible · Vegan options · Limited vegetarian options · Accepts credit cards · Accepts Apple Pay · Accepts Android Pay · Tipping optional · Tipping optional for large parties · Classy (Yelp vibe tag) · Open to All · **Latinx-owned** · **Women-owned**
 
-### Amenities — crossed out on Yelp (never claim these)
+### Amenities: no on Yelp (never claim)
 Takes reservations · Waiter service · Wi-Fi · Alcohol · Drive-thru · TV · Accepts cryptocurrency
 
-### Owner-identity badges on Yelp (Latinx-owned, Women-owned)
-**Held.** Self-declared identity badges. Do not paraphrase into brand copy unless the owner chooses the wording.
+### Menu (Yelp menu page; Yelp adds "Menu may not be up to date")
 
-### Menu as listed on Yelp (Yelp warns "Menu may not be up to date")
+Names follow the Yelp menu page. Ingredient spelling fixed only where Yelp has a typo (Tzaziki → Tzatziki, Chioptle → Chipotle, Picked → Pickled, Chose → Choice, Birra → Birria, Cobb → cob).
 
-| Group | Item | Ingredients as listed |
+| Group | Item | Ingredients | Price |
+| --- | --- | --- | --- |
+| Starters | Egyptian Nachos | corn tortilla chips, beans, feta cheese, garlic sauce, cucumber salad, tzatziki, red onions, hummus, kofta (lamb and ground beef) | $18.75 |
+| Starters | Esquite | fresh corn off the cob, mayonnaise, cotija cheese, butter, chili powder, lime | $8.75 |
+| Starters | La Papas | french fries, choice of meat, cheddar cheese, guacamole, pico de gallo, chipotle aioli, sour cream | $18.75 |
+| Tacos | Fish Taco | fried fish, cabbage, sour cream, chipotle aioli, pickled red onions | $6.50 |
+| Tacos | Queso Birria Taco | handmade corn tortilla, mozzarella cheese, birria, pickled red onions, cilantro | $5.50 |
+| Tacos | El Arabic Taco | handmade corn tortilla, hummus, falafel, mixed greens, cilantro aioli, cucumber salad, pickled red onions | $6.50 |
+| Tacos | Super Street Taco | handmade tortilla, choice of meat, burnt cheese, cilantro, pickled red onion, guacamole | $5.50 |
+| Burritos | Classic Burrito | choice of meat, refried beans, choice of cheese, red onion, cilantro, sour cream | $18.00 |
+| Burritos | LA Burrito | choice of meat, fries, cheddar cheese, pico de gallo, sour cream, chipotle aioli | $19.00 |
+| Burritos | BRC | beans, rice and cheese | $12.00 |
+| Burritos | Habibi Burrito | grilled kebab, basmati rice, hummus, feta cheese, tzatziki, garlic sauce, cucumber salad | $19.00 |
+| Burritos | LA Kebab | grilled kebab, hummus, fries, feta cheese, cucumbers, tomato, garlic sauce, pickled red onions | $19.00 |
+| House Specialties | Yalla Bowl | choice of meat, basmati rice, shredded lettuce, feta, garlic sauce, cucumber salad, tzatziki, hummus, pickled red onion | $21.00 |
+| House Specialties | Kebab Plate | choice of kebab, basmati rice, cucumber salad, tzatziki, grilled jalapeño, pita bread, 1 side | $20.00 |
+| House Specialties | Mexi-Sexi Bowl | choice of meat, Mexican rice, refried beans, choice of cheese, green cabbage, corn, pico de gallo, sour cream, guacamole | $20.00 |
+| House Specialties | Sopes Plate | 2 sopes, choice of meat, lettuce, pico de gallo, sour cream, chipotle aioli, cotija cheese, choice of 2 sides | $21.00 |
+| House Specialties | El Sereno Torta | choice of meat, burnt cheese, lettuce, onion, cilantro, beans, tomato, guacamole, chipotle aioli | $19.00 |
+| Salads | Cilantro Lime Fiesta | choice of cheese, black beans, corn, pico de gallo, tortilla strip chips, romaine lettuce, cilantro lime dressing | $15.00 |
+| Listed with no items | Sides · Dessert · Aguas Fresca · Soda · Extras & Add-Ons · Pop Up | — | — |
+
+**Most-reviewed dishes on Yelp (menu page review counts):** Esquite (31), El Sereno Torta (13), Kebab Plate (10). Yelp's "What's Popular Here" on the menu page: Kebab Plate, El Sereno Torta, Egyptian Nachos.
+
+---
+
+## Tier B — Yelp reviews and Q&A (used as plain fact)
+
+| Fact | From | Site use |
 | --- | --- | --- |
-| Starters | Egyptian Nachos | corn chips, beans, feta, garlic sauce, cucumber salad, tzatziki, red onion, hummus, kofta (lamb and ground beef) |
-| Starters | Esquite | corn, mayonnaise, cotija, butter, chili powder, lime |
-| Starters | La Papas | fries, choice of meat, cheddar, guacamole, pico de gallo, chipotle aioli, sour cream |
-| Tacos | Fish Taco | fried fish, cabbage, sour cream, chipotle aioli, pickled red onions |
-| Tacos | Queso Birria Taco | handmade corn tortilla, mozzarella, birria, pickled red onions, cilantro |
-| Tacos | El Arabic Taco | handmade corn tortilla, hummus, falafel, mixed greens, cilantro aioli, cucumber salad, pickled red onions |
-| Tacos | Super Street Taco | handmade tortilla, choice of meat, burnt cheese, cilantro, pickled red onion, guacamole |
-| Burritos | Classic Burrito | choice of meat, refried beans, cheese, red onion, cilantro, sour cream |
-| Burritos | LA Burrito | choice of meat, fries, cheddar, pico de gallo, sour cream, chipotle aioli |
-| Burritos | BRC | beans, rice, cheese |
-| Burritos | Habibi Burrito | grilled kebab, basmati rice, hummus, feta, tzatziki, garlic sauce, cucumber salad |
-| Burritos | LA Kebab | grilled kebab, hummus, fries, feta, cucumbers, tomato, garlic sauce, pickled red onions |
-| House Specialties | Yalla Bowl | choice of meat, basmati rice, lettuce, feta, garlic sauce, cucumber salad, tzatziki, hummus, pickled red onion |
-| House Specialties | Kebab Plate | choice of kebab, basmati rice, cucumber salad, tzatziki, grilled jalapeño, pita, 1 side |
-| House Specialties | Mexi-Sexi Bowl | choice of meat, Mexican rice, refried beans, cheese, green cabbage, corn, pico de gallo, sour cream, guacamole |
-| House Specialties | Sopes Plate | 2 sopes, choice of meat, lettuce, pico de gallo, sour cream, chipotle aioli, cotija, 2 sides |
-| House Specialties | El Sereno Torta | choice of meat, burnt cheese, lettuce, onion, cilantro, beans, tomato, guacamole, chipotle aioli |
-| Salads | Cilantro Lime Fiesta | cheese, black beans, corn, pico de gallo, tortilla strips, romaine, cilantro-lime dressing |
-| Other groups (no detail listed) | Sides · Dessert · Aguas Fresca · Soda · Extras & Add-Ons · Pop Up | — |
+| Walk-up stand; small and cozy; lots of takeout orders | Several reviews | Supports the walk-up framing and the takeout emphasis |
+| Tortillas are handmade/homemade | Several reviews; the menu itself says "handmade corn tortilla" | Yes |
+| Food is house-made and cooked to order | Several reviews | Yes, as "made to order" / "house-made" |
+| Meats ordered: chicken (pollo), carne asada, kofta (lamb and ground beef), chicken kebab | Reviews and Yelp photo captions | Yes, as the meats for "choice of meat" |
+| Vegetarian options: jackfruit and falafel | Two reviews | Yes |
+| Aguas frescas (Yelp review search, 2026-09-29): watermelon (10 reviews), horchata (9; also strawberry and pumpkin-spice versions), pineapple (6), cucumber lime / cucumber lemonade (about 4), jamaica (3). Tamarindo: 0 | Reviews, Q&A, photo captions | Yes, listed under Aguas Fresca |
+| Specials rotate (an albóndigas special announced on their social media; not always on) | Review | Yes, as "Specials come and go" near the Pop Up group. No special named |
+| Delivery through DoorDash | Review | Yes, as text. No DoorDash link (no URL on Yelp) |
+| Small private lot fills up at lunch; street parking is easier | Review | Yes, Visit section parking tip |
+| Patio seating; dine-in food comes out on real plates; cashier brings food out | Reviews | Yes, "Eat on the patio" line |
+| Traditional Mexican music plays | Review | Optional mood line |
+| Big portions | Several reviews; also Yelp About | Yes |
 
-Yelp menu prices ranged from $5.50 (tacos) to $21.00 (bowls, plates). **Prices are not used on the concept** (see Owner list Q3).
-
-### Explicitly not known (do not invent)
-Official website · official social accounts · online-ordering provider · which meats are "choice of meat" · halal status (a Yelp Q&A on this has no answer) · vegan item names · opening date · awards · recipes · any dietary claim beyond Yelp's "vegan options / limited vegetarian" tags · sourcing claims · hours for holidays · what "Pop Up" and "Extras" contain.
-
----
-
-## Tier B — Customer-reported (provisional, sample only)
-
-| Theme found in reviews | How the concept may use it |
+### Found on Yelp, not used
+| Item | Why |
 | --- | --- |
-| Tortillas are handmade | Yelp's own menu already says "handmade corn tortilla" on tacos — use that wording only where the menu says it |
-| "Everything cooked to order / house-made" | **Not used.** A claim only the owner can make |
-| Jackfruit and falafel are the vegetarian options | Falafel appears on the menu (El Arabic Taco). Jackfruit does not — **not used** |
-| Aguas frescas: watermelon, pineapple, cucumber-lemonade; pumpkin-spice horchata | Aguas Fresca is a menu group. Flavors are **sample labels only**, marked "as mentioned by customers" |
-| Korean-leaning items (bulgogi fries, galbi-chicken burrito), albóndigas special | **Not used.** Not on the Yelp menu; specials rotate |
-| Patio seating, windy day | Outdoor seating is Tier A. "Bring a jacket" is a review aside — not used |
-| Walk-up window, small and cozy, traditional Mexican music, owner said hi | Informs mood. "Walk-up" is the concept's frame; music/owner-greeting are **not stated** |
-| Takeout-heavy, small lot fills up | Informs the Visit section's parking note ("private lot; street parking nearby") — lot is Tier A, "fills up" is **not stated** |
-| Some reviews: pricey, disappointed, one illness report | Not quoted. Noted so no copy overpromises ("best," "always fresh") |
-
-No customer name, quote, or photo is reproduced on the site. **No testimonial section** (no honest avatar photos exist).
+| Reviewer names, quotes, avatars, and photos | Belong to the reviewers. No testimonial section |
+| Opinions: "best", "amazing", "pricey", "disappointing", "stingy with sauces" | Opinions, not facts |
+| One food-poisoning report; health-inspection violations (4 on July 29, 2026) | Not marketing copy. The grade is shown; the details stay on Yelp |
+| Halal | Asked twice on Yelp Q&A, never answered. Never claimed |
+| Espresso drinks | One Q&A asker thinks the menu has iced espresso; unclear. Not used |
+| Korean-leaning dishes (bulgogi fries, galbi-chicken burrito), chicken gyro | Off-menu or past items; not on the current Yelp menu |
+| Earlier KBBQ taco spot at this address | One review; about a previous business |
+| "Have a Tirzahlicious day" banner slogan | Seen only in customer photos; it's the business's own line, so the concept doesn't borrow it |
+| The business's circular logo | Their mark. Typographic placeholder instead |
+| All Yelp photos (225) | Owned by the people who uploaded them. Reference only |
 
 ---
 
-## Tier C — Found elsewhere, hold for owner
+## Tier C — Found outside Yelp (held)
 
-| Item | What was found | Source | Why held |
+| Item | What was found | Source |
+| --- | --- | --- |
+| Owners and couple's story | Tirsa and Steve Farah; Steve is from Egypt; they met about 14 years ago; both studied at Le Cordon Bleu | [LA Taco](https://lataco.com/tirzahs-mexi-terranean), [The LA Local](https://thelalocal.org/art-and-culture/mexican-egyptian-burritos-at-tirzahs/) |
+| Earlier restaurant | Tirsa's Mexican Cafe, Downtown LA | same |
+| Recipe origin | Home cooking; Steve's mother's Egyptian recipes | The LA Local |
+| Social presence | Owner posts videos on Instagram; handle not found | The LA Local |
+| Flour-tortilla kofta "L.A. Kebab Burrito" | Press description; Yelp lists LA Kebab with grilled kebab | LA Taco / LA Local |
+| Earlier concept near Chinatown (2018) | Search summary only | not read |
+| Gift cards | Giftly listing | search result |
+
+## Source conflicts
+
+| Field | Yelp listing (wins) | Other | Result |
 | --- | --- | --- | --- |
-| Owners & couple's story | Tirsa and Steve Farah; Steve is originally from Egypt; they met about 14 years ago; both studied at Le Cordon Bleu | [LA Taco](https://lataco.com/tirzahs-mexi-terranean), [The LA Local](https://thelalocal.org/art-and-culture/mexican-egyptian-burritos-at-tirzahs/) | Personal history and named people; owner must approve wording |
-| Earlier restaurant | Tirsa's Mexican Cafe, Downtown LA, before this location and a rebuilt menu | same | Business history; not on Yelp |
-| Recipe origin | Menu inspired by the couple's home cooking; Steve documenting his mother's Egyptian recipes | The LA Local | Family story; owner approval |
-| Social presence | Owner reportedly posts humorous, trend-driven videos on Instagram | The LA Local | Handle not found; no link may ship |
-| Signature dishes per press | Kofta burritos, falafel sopes, Egyptian nachos, "L.A. Kebab Burrito" (lamb-beef kofta, hummus, fries, garlic sauce, flour tortilla) | LA Taco / LA Local | Overlaps Yelp menu; the flour-tortilla and kofta details are held |
-| Prior brand era | Earlier press mentions a hot-Cheeto-dusted concept near Chinatown in 2018 | search summary | Not verified on a page I read; do not use |
-| Gift cards | A Giftly listing exists | search result | Third-party; unverified |
-
-### Source conflicts
-
-| Field | Yelp (wins) | Other | Action |
-| --- | --- | --- | --- |
-| Name | "Tirzahs Mexi-Terranean Grill" | Press writes "Tirzah's" | Use Yelp spelling. Ask owner which is canonical (the storefront banner in Yelp photos reads "Tirzahs") |
-| Sunday | 11 AM–2 PM | not checked elsewhere | Show as listed; ask owner to confirm |
-| Neighborhood | El Sereno | press: El Sereno; reviews: East LA / Boyle Heights | Visible copy says "Los Angeles"; El Sereno in structured data |
+| Name | Tirzahs Mexi-Terranean Grill | Reviews and press write "Tirzah's" | Tirzahs |
+| Dish names | Menu page: LA Burrito, LA Kebab, La Papas | Listing's Popular Dishes: "La Burrito", "La Kebab" | Menu page spelling |
+| Queso Birria Taco | Menu page: "Queso Birra Taco" (typo) | Popular Dishes: "Queso Birria Tacos" | Queso Birria Taco |
+| Neighborhood | El Sereno | Some reviews: East LA / Boyle Heights | El Sereno |
 
 ---
 
 ## Visual evidence (reference only — none is reusable media)
 
-| What | Source | Rights | Use |
-| --- | --- | --- | --- |
-| Red walk-up stand with brick-tile base, sliding service windows, papel-picado banners, printed vinyl banner ("Have a Tirzahlicious day") | Yelp Outside photos (13), uploaded by customers | Third party | **Reference only.** Drives palette and the window-frame concept. Not copied or traced |
-| Food photos: burritos, birria tacos, sopes, kebab plates, agua fresca cups | Yelp (165 food photos) | Third party | Reference only |
-| Brand mark | Yelp banner shows a small circular logo | Business-owned | Not reproduced. Typographic wordmark placeholder |
+| What | Source | Use |
+| --- | --- | --- |
+| Red walk-up stand with brick-tile base, sliding service windows, papel-picado banners | Yelp Outside photos (13) | Drives palette and the window-frame concept. Not copied or traced |
+| Food photos: burritos, birria tacos, sopes, kebab plates, agua fresca cups | Yelp photos | Reference for generated dish images |
+
+## Re-verification log (2026-09-29, second pass)
+
+Checked every Tier A field against the live listing, menu, Q&A, and health pages.
+
+- **Matched:** name, categories, $$, address, El Sereno, phone, all hours, claimed status, 4.8 / 221 reviews, health grade A, all 19 "yes" amenities, all 7 "no" amenities, About text, 18 menu items, six empty menu groups, halal Q&A unanswered.
+- **Added in this pass:** all 18 prices; health inspection date (July 29, 2026); Yelp's order button; no website or social links on the listing; ingredient wording now copied from the menu page exactly (e.g. "choice of cheese" on the Classic Burrito, Mexi-Sexi Bowl, and Cilantro Lime Fiesta; "choice of 2 sides" on the Sopes Plate); most-reviewed dishes; review-reported facts moved into use.
+- **Nothing on the listing contradicted the first pass.**
 
 ## Sources consulted
-- Yelp business page and menu (URLs above), live read 2026-09-29
+- Yelp listing, menu, Q&A, and health pages (URLs above), live read 2026-09-29, twice
 - Yelp photo gallery (Outside tab), screenshot review
-- LA Taco: https://lataco.com/tirzahs-mexi-terranean
-- The LA Local: https://thelalocal.org/art-and-culture/mexican-egyptian-burritos-at-tirzahs/
-- Search results also surfaced (not read in full): sceneeats.com article (May 2026), Giftly listing
+- LA Taco: https://lataco.com/tirzahs-mexi-terranean (Tier C only)
+- The LA Local: https://thelalocal.org/art-and-culture/mexican-egyptian-burritos-at-tirzahs/ (Tier C only)
