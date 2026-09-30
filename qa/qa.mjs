@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
   });
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
-const BASE = `http://127.0.0.1:${server.address().port}/`;
+const BASE = process.env.QA_URL || `http://127.0.0.1:${server.address().port}/`; // QA_URL checks the live site
 
 /* chrome */
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
