@@ -27,13 +27,16 @@
   /* ======================================================================
      HERO SCRUB
      ====================================================================== */
-  const VIDEO_URL = 'assets/hero-scrub.mp4';
-  const POSTER_URL = 'assets/hero-poster.jpg';
-  const VIDEO_BYTES = 6701623; // real encoded size; the fallback when Content-Length is missing
+  // Two cuts of the same descent: 16:9 for landscape screens, 9:16 for portrait (phones, tablets held upright).
+  // Byte sizes are the fallback when Content-Length is missing.
+  const VARIANTS = {
+    land: { video: 'assets/hero-scrub.mp4', poster: 'assets/hero-poster.jpg', bytes: 6701623 },
+    port: { video: 'assets/hero-scrub-m.mp4', poster: 'assets/hero-poster-m.jpg', bytes: 3579785 }
+  };
+  const PORTRAIT = matchMedia('(orientation: portrait)');
+  const variantNow = () => (PORTRAIT.matches ? 'port' : 'land');
+  // Static-hero gates (identical strings in site.css): phones held sideways have no room, reduced motion gets no video.
   const GATES = [
-    '(max-width: 720px)',
-    '(orientation: portrait) and (max-width: 1024px)',
-    '(orientation: portrait) and (pointer: coarse)',
     '(orientation: landscape) and (pointer: coarse) and (max-height: 560px)',
     '(prefers-reduced-motion: reduce)'
   ];
@@ -94,7 +97,7 @@
   let loadK = 0, loadStart = 0, cueGone = null;
 
   function heroProgress() {
-    const range = hero.offsetHeight - innerHeight;
+    const range = hero.offsetHeight - stage.offsetHeight; // the stage is 100svh, so the phone toolbar never shifts progress
     return range > 0 ? clamp(-hero.getBoundingClientRect().top / range, 0, 1) : 0;
   }
 
@@ -152,34 +155,51 @@
     if (t < 1) requestAnimationFrame(loadRamp);
   }
 
+  let loaded = null, loadToken = 0, blobUrl = null;
+
   function initHeroOnce() {
-    if (heroInit) return;
-    heroInit = true;
-    posterLayer.style.backgroundImage = `url('${POSTER_URL}')`;
-    let started = false;
-    const start = () => { if (started) return; started = true; loadHeroVideo().catch(failVideo); };
-    const img = new Image();
-    img.onload = start; img.onerror = start; img.src = POSTER_URL;
-    setTimeout(start, 4000);
-    loadStart = performance.now();
-    requestAnimationFrame(loadRamp);
+    if (!heroInit) {
+      heroInit = true;
+      loadStart = performance.now();
+      requestAnimationFrame(loadRamp);
+    }
+    loadVariant(variantNow());
   }
 
-  async function loadHeroVideo() {
+  // Poster first, then the video streams in behind the ring. A newer call (rotation) cancels an older one.
+  function loadVariant(v) {
+    if (loaded === v) return;
+    loaded = v;
+    const token = ++loadToken;
+    const { poster } = VARIANTS[v];
+    stage.classList.remove('video-ready', 'video-failed');
+    ring.style.setProperty('--ld', 126);
+    seekBusy = false; pendingTime = null;
+    posterLayer.style.backgroundImage = `url('${poster}')`;
+    let started = false;
+    const start = () => { if (started || token !== loadToken) return; started = true; loadHeroVideo(v, token).catch(() => { if (token === loadToken) failVideo(); }); };
+    const img = new Image();
+    img.onload = start; img.onerror = start; img.src = poster;
+    setTimeout(start, 4000);
+  }
+
+  async function loadHeroVideo(v, token) {
+    const { video: url, bytes } = VARIANTS[v];
     if (location.protocol === 'file:') { // double-click preview: fetch is blocked, play the file directly
-      video.src = VIDEO_URL; video.load(); whenReady(); ring.style.setProperty('--ld', 0); return;
+      video.src = url; video.load(); whenReady(token); ring.style.setProperty('--ld', 0); return;
     }
     const ctrl = new AbortController();
     let watchdog = setTimeout(() => ctrl.abort(), 20000);
-    const res = await fetch(VIDEO_URL, { priority: 'low', signal: ctrl.signal });
+    const res = await fetch(url, { priority: 'low', signal: ctrl.signal });
     if (!res.ok || !res.body) throw new Error('video ' + res.status);
-    const total = Number(res.headers.get('Content-Length')) || VIDEO_BYTES;
+    const total = Number(res.headers.get('Content-Length')) || bytes;
     const reader = res.body.getReader();
     const chunks = [];
     let got = 0, lastRing = 0;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
+      if (token !== loadToken) { ctrl.abort(); clearTimeout(watchdog); return; }
       clearTimeout(watchdog);
       watchdog = setTimeout(() => ctrl.abort(), 20000);
       chunks.push(value);
@@ -189,18 +209,27 @@
       if (now - lastRing > 100 || frac === 1) { lastRing = now; ring.style.setProperty('--ld', Math.round(126 * (1 - frac))); }
     }
     clearTimeout(watchdog);
+    if (token !== loadToken) return;
     ring.style.setProperty('--ld', 0);
-    video.src = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    const old = blobUrl;
+    blobUrl = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    video.src = blobUrl;
+    if (old) URL.revokeObjectURL(old);
     video.load();
-    whenReady();
+    whenReady(token);
   }
-  function whenReady() {
+  function whenReady(token) {
     video.addEventListener('canplay', () => {
-      stage.classList.add('video-ready');
-      requestSeek(timeFor(heroProgress()));
+      if (token !== loadToken) return;
+      const reveal = () => { stage.classList.add('video-ready'); requestSeek(timeFor(heroProgress())); };
+      // iOS Safari only paints seeked frames after the video has played once: a muted play/pause wakes the decoder.
+      const p = video.play();
+      if (p && p.then) p.then(() => { video.pause(); reveal(); }).catch(reveal);
+      else { video.pause(); reveal(); }
     }, { once: true });
   }
   function failVideo() { stage.classList.add('video-failed'); }
+  PORTRAIT.addEventListener('change', () => { if (scrubOn) { loadVariant(variantNow()); onScroll(); } });
 
   function enableScrub() {
     if (scrubOn) return;

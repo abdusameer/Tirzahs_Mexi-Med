@@ -171,6 +171,15 @@ async function flick() {
 async function mobile() {
   reducedMotion = false;
   const res = {};
+  // a phone held sideways has no room for the journey: static hero, no video
+  await viewport(844, 390, { mobile: true, touch: true });
+  await load();
+  res['844x390 landscape'] = {
+    staticShown: await ev(`getComputedStyle(document.querySelector('.hero-static')).display`),
+    videoRequested: requests.some(u => u.includes('hero-scrub')),
+    overflowX: await ev(`document.documentElement.scrollWidth - innerWidth`),
+  };
+  await shot('mobile-844-landscape');
   for (const [w, h] of [[390, 844], [375, 667]]) {
     await viewport(w, h, { mobile: true, touch: true });
     await load();
@@ -243,7 +252,8 @@ async function flip() {
 // worst-frame legibility audit: hide the glyphs, screenshot, save band boxes for the Python pass
 async function audit() {
   reducedMotion = false;
-  await viewport(1440, 900);
+  const AW = +(process.env.QA_W || 1440), AH = +(process.env.QA_H || 900);
+  await viewport(AW, AH, AW < AH ? { mobile: true, touch: true } : {});
   await load(); await waitVideo();
   const plan = { 0: [0.02, 0.1, 0.2], 1: [0.3, 0.38, 0.46], 2: [0.57, 0.65, 0.73], 3: [0.86, 0.93, 1] };
   const boxes = [];
@@ -310,8 +320,57 @@ async function file() {
   await shot('file-hero-0_64');
 }
 
+// phone scrub: the 9:16 cut loads, scrubs, and every band shows in its range (390x844 touch by default)
+async function phone() {
+  reducedMotion = false;
+  const W = +(process.env.QA_W || 390), H = +(process.env.QA_H || 844);
+  await viewport(W, H, { mobile: true, touch: true });
+  await load();
+  const vid = await waitVideo();
+  const res = {
+    video: vid,
+    scrubShown: await ev(`getComputedStyle(document.querySelector('.hero-scrub')).display`),
+    staticShown: await ev(`getComputedStyle(document.querySelector('.hero-static')).display`),
+    phoneCut: requests.some(u => u.includes('hero-scrub-m.mp4')),
+    desktopCut: requests.some(u => /hero-scrub\.mp4/.test(u)),
+    positions: {}
+  };
+  for (const p of [0, 0.38, 0.64, 0.9, 1]) {
+    const y = await heroScrollFor(p); await scrollToY(y, 1800);
+    res.positions[p] = await probe();
+    await shot(`phone-${W}-hero-${String(p).replace('.', '_')}`);
+  }
+  // one thumb swipe from the top, like a real visitor
+  await ev('window.scrollTo(0,0)'); await sleep(800);
+  await cdp.send('Input.synthesizeScrollGesture', { x: Math.round(W / 2), y: Math.round(H * 0.7), yDistance: -Math.round(H * 0.6), gestureSourceType: 'touch', speed: 1600 });
+  await sleep(1500);
+  res.afterSwipe = await probe();
+  res.overflowX = await ev(`document.documentElement.scrollWidth - innerWidth`);
+  res.consoleErrors = [...consoleErrors];
+  report.checks.phone = res;
+}
+
+// phone tour: screenshot the whole page viewport by viewport (390x844, touch)
+async function mtour() {
+  reducedMotion = false;
+  const W = +(process.env.QA_W || 390), H = +(process.env.QA_H || 844);
+  await viewport(W, H, { mobile: true, touch: true });
+  await load();
+  await sleep(1500);
+  const total = await ev('document.documentElement.scrollHeight');
+  const shots = [];
+  let i = 0;
+  for (let y = 0; y < total; y += Math.round(H * 0.85)) {
+    await ev(`window.scrollTo(0, ${y})`);
+    await sleep(1300);
+    const name = `mtour-${W}-${String(i).padStart(2, '0')}`;
+    await shot(name); shots.push(name); i++;
+  }
+  report.checks.mtour = { total, shots: shots.length, overflowX: await ev(`document.documentElement.scrollWidth - innerWidth`), consoleErrors: [...consoleErrors] };
+}
+
 try {
-  const run = { desktop, flick, mobile, reduced, novideo, flip, audit, nojs, keys, file };
+  const run = { desktop, flick, mobile, reduced, novideo, flip, audit, nojs, keys, file, mtour, phone };
   if (MODE === 'all') { for (const k of ['desktop', 'mobile', 'reduced', 'novideo', 'flip', 'flick', 'audit']) await run[k](); }
   else await run[MODE]();
 } catch (e) { report.error = String(e.stack || e); }

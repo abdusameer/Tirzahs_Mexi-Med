@@ -26,6 +26,11 @@ Seam slider, Mediterranean side (seam-med-*.webp)
   model: nano_banana_pro   job: 6ea75532-e0a1-4d96-8f2f-73f04a92c7c7
   prompt: Edit this photo: the whole counter now holds only Mediterranean food. On the right keep the kebab bowl with basmati rice, hummus, cucumber salad and pink pickled onions. On the left, replace the tacos and the esquite wit...
 
+Phone hero video (hero-scrub-m.mp4, hero-poster-m.jpg), 9:16 cut for portrait screens
+  model: kling3_0   job: 64c36ded-978c-482d-8bbe-6f66cbfcb76d   (2026-09-30)
+  start frame: 9:16 crop of the sky start frame; end frame: 9:16 crop of the hero window photo
+  prompt: One continuous vertical shot, no cuts. The camera cranes slowly and steadily straight down, from open blue afternoon sky with soft clouds and a few magnolia leaves, past strings of colorful papel picado banners that ripp...
+
 Dish, drink, sides, extras, soda, pop-up, window-counter, papel-picado, and brick images:
   model: gpt_image_2_5 (quality high, 2k; hero window at 4k). See photos/generated/PROVENANCE.md.
 
