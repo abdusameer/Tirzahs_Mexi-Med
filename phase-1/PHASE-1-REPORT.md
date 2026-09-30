@@ -39,6 +39,14 @@ Sections, in order: scroll-scrubbed hero (sky to counter) · Two kitchens (drag 
 | Console errors / horizontal overflow | none / 0 px at every size tested |
 | Copy gate | zero em dashes, zero stock words, no AI-tell phrasing |
 
+## Mobile pass (2026-09-30)
+
+- Phones and upright tablets now scrub their own 9:16 cut of the same descent (Kling 3.0 Pro at the user's choice, 10.5 credits; encoded 900 px wide, crf 25, keyframe every 8 frames: 3.6 MB). Landscape screens keep the 16:9 cut; rotating swaps cuts mid-visit. A muted play/pause primes the decoder so iOS Safari paints seeked frames.
+- Static hero only for phones held sideways and reduced motion (the two gates match in CSS and JS).
+- Phone bands are full width with deeper scrims: worst-frame contrast 7.29, 7.70, 7.17, 7.51 : 1 at 390×844.
+- Menu tabs and dish cards are snap-scrolling rows on phones ("Swipe for more dishes"); square slider and plate photos; solid nav; balanced line breaks.
+- Verified headless at 390×844 and 375×667 (touch): the phone cut loads (not the desktop cut), scrub tracks scroll, a thumb swipe moves it, no sideways scroll, no console errors. Still needs a check on a real phone.
+
 ## Known limits
 
 - The video's last second still pushes in slightly; the scroll rests on the pinned end frame, so the settle reads as arriving.
