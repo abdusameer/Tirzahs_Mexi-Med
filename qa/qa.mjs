@@ -7,7 +7,7 @@ import path from 'node:path';
 import os from 'node:os';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
-const ROOT = path.resolve(HERE, '../site');
+const ROOT = path.resolve(process.env.QA_ROOT || path.resolve(HERE, '../site')); // QA_ROOT tests another copy (e.g. the previous commit)
 const OUT = path.resolve(HERE, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 const MODE = process.argv[2] || 'all';
@@ -34,7 +34,7 @@ const BASE = process.env.QA_URL || `http://127.0.0.1:${server.address().port}/`;
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const PORT = 9300 + Math.floor(Math.random() * 400);
 const profile = fs.mkdtempSync(path.join(process.env.QA_TMP || os.tmpdir(), 'tzqa-'));
-const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
+const chrome = spawn(CHROME, ['--headless=new', ...(process.env.QA_GPU ? [] : ['--disable-gpu']), `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
   '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', '--autoplay-policy=no-user-gesture-required', 'about:blank'], { stdio: 'ignore' });
 
 async function wsUrl() {
@@ -320,6 +320,60 @@ async function file() {
   await shot('file-hero-0_64');
 }
 
+// performance: scroll the whole page like a visitor while sampling every frame.
+// env: QA_W, QA_H (touch when portrait), QA_CPU (CPU slowdown, e.g. 4 for a mid-range phone)
+const ANIM_PROBE = `(()=>{const out=[];const vh=innerHeight;
+  for(const el of document.querySelectorAll('body *')){
+    for(const pseudo of [null,'::before','::after']){
+      const cs=getComputedStyle(el,pseudo);if(!cs.animationName||cs.animationName==='none')continue;
+      const r=el.getBoundingClientRect();const onscreen=r.bottom>0&&r.top<vh&&r.width>0&&r.height>0;
+      if(cs.animationPlayState.includes('running')) out.push({el:(el.className&&el.className.baseVal===undefined?String(el.className):el.tagName).slice(0,40)+(pseudo||''),name:cs.animationName,onscreen});
+    }}
+  return {running:out.length,offscreenRunning:out.filter(a=>!a.onscreen).map(a=>a.el+' '+a.name)}})()`;
+async function perf() {
+  reducedMotion = false;
+  const W = +(process.env.QA_W || 1440), H = +(process.env.QA_H || 900), CPU = +(process.env.QA_CPU || 1);
+  const touch = W < H;
+  await viewport(W, H, touch ? { mobile: true, touch: true } : {});
+  await load(); await waitVideo(); await sleep(800);
+  await cdp.send('Performance.enable');
+  if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
+  const anim = {};
+  anim.top = await ev(ANIM_PROBE);
+  await ev(`window.__f=[];window.__y=[];window.__lt=[];(function loop(t){__f.push(t);__y.push(Math.round(scrollY));window.__raf=requestAnimationFrame(loop)})(performance.now());
+    try{new PerformanceObserver(l=>l.getEntries().forEach(e=>__lt.push(Math.round(e.duration)))).observe({type:'longtask'})}catch(e){}`);
+  const metrics = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]));
+  const m0 = await metrics();
+  const t0 = Date.now();
+  const heroEnd = await ev(`(()=>{const h=document.querySelector('.hero');return h.offsetTop+h.offsetHeight})()`);
+  let heroFrames = null, midSampled = false;
+  for (let i = 0; i < 400; i++) {
+    const y = await ev('scrollY');
+    const max = await ev('document.documentElement.scrollHeight - innerHeight');
+    if (heroFrames === null && y >= heroEnd - H) heroFrames = await ev('__f.length');
+    if (!midSampled && y > max / 2) { anim.mid = await ev(ANIM_PROBE); midSampled = true; }
+    if (y >= max - 2) break;
+    if (touch) await cdp.send('Input.synthesizeScrollGesture', { x: Math.round(W / 2), y: Math.round(H * 0.75), yDistance: -Math.round(H * 0.55), gestureSourceType: 'touch', speed: 1400 });
+    else { await cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: W / 2, y: H / 2, deltaX: 0, deltaY: 100 }); await sleep(45); }
+  }
+  await sleep(1200);
+  const secs = (Date.now() - t0) / 1000;
+  const m1 = await metrics();
+  anim.bottom = await ev(ANIM_PROBE);
+  const stats = await ev(`(()=>{cancelAnimationFrame(__raf);const d=[];for(let i=1;i<__f.length;i++)d.push(__f[i]-__f[i-1]);
+    const s=[...d].sort((a,b)=>a-b);const pct=q=>+s[Math.floor(s.length*q)].toFixed(1);
+    const heroN=${'${HERO}'};const seg=(a,b)=>{const x=d.slice(a,b);return x.length?+(1000/(x.reduce((p,c)=>p+c,0)/x.length)).toFixed(1):null};
+    return {frames:d.length,avgFps:+(1000/(d.reduce((a,b)=>a+b,0)/d.length)).toFixed(1),p50:pct(.5),p95:pct(.95),p99:pct(.99),
+      over20ms:+(100*d.filter(x=>x>20).length/d.length).toFixed(1),over33ms:+(100*d.filter(x=>x>33.4).length/d.length).toFixed(1),
+      heroFps:seg(0,heroN),belowFps:seg(heroN,d.length),longTasks:__lt.length,longTaskMs:__lt.reduce((a,b)=>a+b,0),
+      slowFrames:d.map((x,i)=>[Math.round(x),__y[i+1]]).filter(a=>a[0]>25).map(a=>{const el=[...document.querySelectorAll('main > section, footer')].find(s=>a[1]+innerHeight/2>=s.offsetTop&&a[1]+innerHeight/2<s.offsetTop+s.offsetHeight);return a[0]+'ms@'+a[1]+'('+(el?el.id||el.className:'?')+')'})}})()`.replace('${HERO}', String(heroFrames ?? 0)));
+  const dm = k => +((m1[k] || 0) - (m0[k] || 0)).toFixed(3);
+  report.checks.perf = { viewport: `${W}x${H}`, cpuSlowdown: CPU, seconds: +secs.toFixed(1), ...stats,
+    busy: { layoutS: dm('LayoutDuration'), styleS: dm('RecalcStyleDuration'), scriptS: dm('ScriptDuration'), taskS: dm('TaskDuration'), layouts: dm('LayoutCount'), styleRecalcs: dm('RecalcStyleCount') },
+    animations: anim, consoleErrors: [...consoleErrors] };
+  if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+}
+
 // phone scrub: the 9:16 cut loads, scrubs, and every band shows in its range (390x844 touch by default)
 async function phone() {
   reducedMotion = false;
@@ -370,7 +424,7 @@ async function mtour() {
 }
 
 try {
-  const run = { desktop, flick, mobile, reduced, novideo, flip, audit, nojs, keys, file, mtour, phone };
+  const run = { desktop, flick, mobile, reduced, novideo, flip, audit, nojs, keys, file, mtour, phone, perf };
   if (MODE === 'all') { for (const k of ['desktop', 'mobile', 'reduced', 'novideo', 'flip', 'flick', 'audit']) await run[k](); }
   else await run[MODE]();
 } catch (e) { report.error = String(e.stack || e); }

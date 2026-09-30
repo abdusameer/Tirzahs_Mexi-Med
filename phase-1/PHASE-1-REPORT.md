@@ -47,6 +47,24 @@ Sections, in order: scroll-scrubbed hero (sky to counter) · Two kitchens (drag 
 - Menu tabs and dish cards are snap-scrolling rows on phones ("Swipe for more dishes"); square slider and plate photos; solid nav; balanced line breaks.
 - Verified headless at 390×844 and 375×667 (touch): the phone cut loads (not the desktop cut), scrub tracks scroll, a thumb swipe moves it, no sideways scroll, no console errors. Still needs a check on a real phone.
 
+## Performance pass (2026-09-30)
+
+Measured with `node qa/qa.mjs perf` (headless Chrome with GPU, full-page scroll: wheel on desktop, touch swipes on a phone with the CPU slowed 4×), three alternating runs each against the previous commit.
+
+| Phone 390×844, CPU 4× | Before | After |
+|---|---|---|
+| Average fps | 57.4 | 59.6 |
+| Hero fps | 54.0 | 59.9 |
+| p99 frame | 27.8 ms | 16.8 ms |
+| Frames over 20 ms | 1.5% | 0.4% |
+| Long tasks | 0.7 per run (59 ms) | 0 |
+| Style + script time | 0.95 s | 0.61 s |
+| Animations running offscreen | papel sway, seam nudge | none |
+
+Desktop 1440×900 held 60 fps (five of six new runs at 60.0 to 60.1 with 0 to 2 slow frames; one run had a single 683 ms stall with no main-thread task, not reproduced in three reruns).
+
+Changes: hero seeks skip when the target is within half a frame (no re-decoding the same picture); hero geometry cached (no layout reads while scrolling); only on-screen bands get their own layer; parallax images and the slider move on the compositor; no backdrop blur behind the hero chip; no blend mode on the full-screen grain; two-layer text shadow; loops paused per element when offscreen; background drift off on touch screens; smaller phone versions of the Visit photo and papel picado.
+
 ## Known limits
 
 - The video's last second still pushes in slightly; the scroll rests on the pinned end frame, so the settle reads as arriving.

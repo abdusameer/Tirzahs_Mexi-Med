@@ -17,8 +17,9 @@
 
   /* ---------- pause every loop on hidden tabs; living elements only run in view ---------- */
   document.addEventListener('visibilitychange', () => document.body.classList.toggle('paused', document.hidden));
-  const viewIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('in-view', e.isIntersecting)), { rootMargin: '10% 0px' });
-  $$('.kitchens, .visit').forEach(el => viewIO.observe(el));
+  // observe the animated elements themselves, so each loop stops the moment its own element leaves the screen
+  const viewIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('in-view', e.isIntersecting)), { threshold: 0.01 });
+  $$('.papel, [data-status]').forEach(el => viewIO.observe(el));
 
   /* ---------- icons (Solar via Iconify, inlined in icons.js) ---------- */
   const ICONS = window.TZ_ICONS || {};
@@ -93,18 +94,24 @@
 
   let scrubOn = false, heroInit = false, heroOnScreen = true;
   let target = 0, shown = 0, rafId = null, lastTick = 0;
-  let seekBusy = false, pendingTime = null;
+  let seekBusy = false, pendingTime = null, lastSeek = -1;
   let loadK = 0, loadStart = 0, cueGone = null;
+  const HALF_FRAME = 1 / 48; // the clips are 24 fps: a seek closer than half a frame shows the same picture
 
-  function heroProgress() {
-    const range = hero.offsetHeight - stage.offsetHeight; // the stage is 100svh, so the phone toolbar never shifts progress
-    return range > 0 ? clamp(-hero.getBoundingClientRect().top / range, 0, 1) : 0;
+  // hero geometry is cached, so scrolling never forces a layout read; re-measured on resize and layout changes
+  let heroTop = 0, heroRange = 1;
+  function measureHero() {
+    heroTop = hero.getBoundingClientRect().top + scrollY;
+    heroRange = Math.max(1, hero.offsetHeight - stage.offsetHeight); // the stage is 100svh, so the phone toolbar never shifts progress
   }
+  function heroProgress() { return clamp((scrollY - heroTop) / heroRange, 0, 1); }
 
-  function requestSeek(t) {
+  function requestSeek(t, force) {
     if (!video.duration || !isFinite(video.duration)) return;
     if (seekBusy) { pendingTime = t; return; }
+    if (!force && Math.abs(t - lastSeek) < HALF_FRAME) return; // same frame: skip the decode
     seekBusy = true;
+    lastSeek = t;
     video.currentTime = t;
   }
   video.addEventListener('seeked', () => {
@@ -125,7 +132,10 @@
       const ramp = b.ramp || Math.min(0.025, (b.b - b.a) * 0.35);
       let k = clamp((p - b.a) / ramp, 0, 1);
       if (i === 0) k = Math.max(k, loadK);
-      if (op !== b.op) { b.op = op; b.el.style.opacity = op; }
+      if (op !== b.op) {
+        if ((op > 0) !== (b.op > 0)) b.el.classList.toggle('on', op > 0); // promote only the bands on screen
+        b.op = op; b.el.style.opacity = op;
+      }
       if (Math.abs(k - b.k) > 0.008 || (k === 1 && b.k !== 1) || (k === 0 && b.k !== 0)) { b.k = k; b.el.style.setProperty('--k', k.toFixed(3)); }
       if (b.ctas) { const live = op > 0.6; if (live !== b.live) { b.live = live; b.ctas.inert = !live; } }
     }
@@ -174,7 +184,7 @@
     const { poster } = VARIANTS[v];
     stage.classList.remove('video-ready', 'video-failed');
     ring.style.setProperty('--ld', 126);
-    seekBusy = false; pendingTime = null;
+    seekBusy = false; pendingTime = null; lastSeek = -1;
     posterLayer.style.backgroundImage = `url('${poster}')`;
     let started = false;
     const start = () => { if (started || token !== loadToken) return; started = true; loadHeroVideo(v, token).catch(() => { if (token === loadToken) failVideo(); }); };
@@ -221,7 +231,7 @@
   function whenReady(token) {
     video.addEventListener('canplay', () => {
       if (token !== loadToken) return;
-      const reveal = () => { stage.classList.add('video-ready'); requestSeek(timeFor(heroProgress())); };
+      const reveal = () => { stage.classList.add('video-ready'); requestSeek(timeFor(heroProgress()), true); };
       // iOS Safari only paints seeked frames after the video has played once: a muted play/pause wakes the decoder.
       const p = video.play();
       if (p && p.then) p.then(() => { video.pause(); reveal(); }).catch(reveal);
@@ -231,12 +241,22 @@
   function failVideo() { stage.classList.add('video-failed'); }
   PORTRAIT.addEventListener('change', () => { if (scrubOn) { loadVariant(variantNow()); onScroll(); } });
 
+  let resizeQueued = false;
+  function onResize() {
+    if (resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(() => { resizeQueued = false; measureHero(); if (scrubOn) onScroll(); });
+  }
+  new ResizeObserver(onResize).observe(hero);
+  addEventListener('load', onResize, { once: true });
+
   function enableScrub() {
     if (scrubOn) return;
     scrubOn = true;
+    measureHero();
     initHeroOnce();
     addEventListener('scroll', onScroll, { passive: true });
-    addEventListener('resize', onScroll, { passive: true });
+    addEventListener('resize', onResize, { passive: true });
     bands.forEach(b => { b.op = -1; b.k = -1; b.live = null; });
     cueGone = null;
     target = shown = heroProgress();
@@ -247,7 +267,7 @@
     if (!scrubOn) return;
     scrubOn = false;
     removeEventListener('scroll', onScroll);
-    removeEventListener('resize', onScroll);
+    removeEventListener('resize', onResize);
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
   }
   const MQLS = GATES.map(q => matchMedia(q));
@@ -356,6 +376,7 @@
     else if (e.key === 'End') { e.preventDefault(); setSeam(100); }
   });
   setSeam(50);
+  seam.addEventListener('animationend', e => { if (e.animationName === 'nudge') seam.classList.remove('nudge'); });
   if (!RM.matches) {
     const nudgeIO = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { seam.classList.add('nudge'); nudgeIO.disconnect(); }
