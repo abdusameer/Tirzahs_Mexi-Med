@@ -33,7 +33,7 @@
   // behind it. Byte sizes are the fallback when Content-Length is missing.
   const VARIANTS = {
     land: { preview: 'assets/hero-preview.mp4', previewBytes: 466388, video: 'assets/hero-scrub.mp4', bytes: 6701623, poster: 'assets/hero-poster.webp' },
-    port: { preview: 'assets/hero-preview-m.mp4', previewBytes: 511243, video: 'assets/hero-scrub-m.mp4', bytes: 3579785, poster: 'assets/hero-poster-m.webp' }
+    port: { preview: 'assets/hero-preview-m.mp4', previewBytes: 511243, video: 'assets/hero-scrub-m.mp4', bytes: 4432808, poster: 'assets/hero-poster-m.webp' }
   };
   const SAVE_DATA = !!(navigator.connection && navigator.connection.saveData); // data saver: stay on the preview
   const PORTRAIT = matchMedia('(orientation: portrait)');
@@ -99,6 +99,7 @@
   let seekBusy = false, pendingTime = null, lastSeek = -1;
   let loadK = 0, loadStart = 0, cueGone = null;
   const HALF_FRAME = 1 / 48; // the clips are 24 fps: a seek closer than half a frame shows the same picture
+  const WARM_AHEAD = 0.07, WARM_AFTER = 0.03; // in hero progress: about a third of a screen of scroll each way
 
   // hero geometry is cached, so scrolling never forces a layout read; re-measured on resize and layout changes
   let heroTop = 0, heroRange = 1;
@@ -139,10 +140,11 @@
       const ramp = b.ramp || Math.min(0.025, (b.b - b.a) * 0.35);
       let k = clamp((p - b.a) / ramp, 0, 1);
       if (i === 0) k = Math.max(k, loadK);
-      if (op !== b.op) {
-        if ((op > 0) !== (b.op > 0)) b.el.classList.toggle('on', op > 0); // promote only the bands on screen
-        b.op = op; b.el.style.opacity = op;
-      }
+      // warm a band's layers a little before it arrives and drop them after it leaves, so the layer setup
+      // never lands on the frame where the words start moving
+      const warm = p > b.a - WARM_AHEAD && p < b.b + WARM_AFTER;
+      if (warm !== b.warm) { b.warm = warm; b.el.classList.toggle('warm', warm); }
+      if (op !== b.op) { b.op = op; b.el.style.opacity = op; }
       if (Math.abs(k - b.k) > 0.008 || (k === 1 && b.k !== 1) || (k === 0 && b.k !== 0)) { b.k = k; b.el.style.setProperty('--k', k.toFixed(3)); }
       if (b.ctas) { const live = op > 0.6; if (live !== b.live) { b.live = live; b.ctas.inert = !live; } }
     }
@@ -298,8 +300,9 @@
     video = hi; blobUrl = url; incoming = null;
     seekBusy = false; pendingTime = null; lastSeek = hi.currentTime;
     hi.classList.remove('incoming');
-    prev.remove();
-    if (prevUrl) URL.revokeObjectURL(prevUrl);
+    // release the preview cleanly: stop its media pipeline first, free its blob a moment later
+    prev.pause(); prev.removeAttribute('src'); prev.load(); prev.remove();
+    if (prevUrl) setTimeout(() => URL.revokeObjectURL(prevUrl), 1000);
     requestAnimationFrame(() => hi.classList.remove('snap'));
     stage.classList.add('video-hq');
     onScroll(); // catch up with any scrolling that happened during the swap
@@ -323,7 +326,7 @@
     initHeroOnce();
     addEventListener('scroll', onScroll, { passive: true });
     addEventListener('resize', onResize, { passive: true });
-    bands.forEach(b => { b.op = -1; b.k = -1; b.live = null; });
+    bands.forEach(b => { b.op = -1; b.k = -1; b.live = null; b.warm = null; });
     cueGone = null;
     target = shown = heroProgress();
     updateCaptions(shown);

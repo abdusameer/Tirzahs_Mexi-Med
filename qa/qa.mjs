@@ -426,6 +426,37 @@ async function perf() {
   if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 }
 
+// band entries: scroll slowly through the hero only and report slow frames by hero progress,
+// so a hitch when a caption arrives shows up next to its band. env: QA_W/QA_H, QA_CPU
+async function bandperf() {
+  reducedMotion = false;
+  const W = +(process.env.QA_W || 1440), H = +(process.env.QA_H || 900), CPU = +(process.env.QA_CPU || 1);
+  const touch = W < H;
+  await viewport(W, H, touch ? { mobile: true, touch: true } : {});
+  await load(); await waitVideo();
+  for (let i = 0; i < 40 && !(await ev(`document.querySelector('[data-stage]').classList.contains('video-hq')`)); i++) await sleep(250);
+  await sleep(800);
+  if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
+  const bands = await ev(`[...document.querySelectorAll('[data-band]')].map(b=>[+b.dataset.a,+b.dataset.b])`);
+  await ev(`(()=>{const h=document.querySelector('[data-hero]'),st=document.querySelector('[data-stage]');window.__hp=()=>Math.max(0,Math.min(1,(scrollY-h.offsetTop)/(h.offsetHeight-st.offsetHeight)));
+    window.__f=[];window.__p=[];(function loop(t){__f.push(t);__p.push(__hp());window.__raf=requestAnimationFrame(loop)})(performance.now())})()`);
+  const end = await heroScrollFor(1);
+  for (let i = 0; i < 600; i++) {
+    const y = await ev('scrollY'); if (y >= end) break;
+    if (touch) await cdp.send('Input.synthesizeScrollGesture', { x: Math.round(W / 2), y: Math.round(H * 0.7), yDistance: -Math.round(H * 0.18), gestureSourceType: 'touch', speed: 600 });
+    else { await cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: W / 2, y: H / 2, deltaX: 0, deltaY: 60 }); await sleep(40); }
+  }
+  await sleep(1000);
+  const out = await ev(`(()=>{cancelAnimationFrame(__raf);const d=[];for(let i=1;i<__f.length;i++)d.push([__f[i]-__f[i-1],__p[i]]);
+    const bands=${JSON.stringify(bands)};const near=p=>{for(const [a,b] of bands){if(Math.abs(p-a)<0.04)return 'enter '+a;if(Math.abs(p-b)<0.04)return 'exit '+b}return 'mid'};
+    const slow=d.filter(x=>x[0]>20).map(x=>Math.round(x[0])+'ms@p'+x[1].toFixed(3)+' '+near(x[1]));
+    const n=d.length,avg=d.reduce((a,x)=>a+x[0],0)/n;
+    const enterFrames=d.filter(x=>near(x[1]).startsWith('enter'));const ent=enterFrames.reduce((a,x)=>a+x[0],0)/Math.max(1,enterFrames.length);
+    return {frames:n,avgFps:+(1000/avg).toFixed(1),fpsAtBandEntries:+(1000/ent).toFixed(1),over20ms:+(100*d.filter(x=>x[0]>20).length/n).toFixed(1),slow}})()`);
+  if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  report.checks.bandperf = { viewport: `${W}x${H}`, cpu: CPU, ...out, consoleErrors: [...consoleErrors] };
+}
+
 // load: empty cache over a throttled network. Reports first paint, largest paint, when the scrub
 // is ready (and when the full-quality cut has swapped in), bytes by type, requests, and third-party origins.
 // env: QA_W/QA_H (portrait = phone), QA_NET = slow4g | 4g | cable
@@ -533,7 +564,7 @@ async function mtour() {
 }
 
 try {
-  const run = { desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
+  const run = { bandperf, desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
   if (MODE === 'all') { for (const k of ['desktop', 'mobile', 'reduced', 'novideo', 'flip', 'flick', 'audit']) await run[k](); }
   else await run[MODE]();
 } catch (e) { report.error = String(e.stack || e); }

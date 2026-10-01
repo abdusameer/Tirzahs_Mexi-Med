@@ -143,7 +143,11 @@ html.js .hero-static{display:none}
 .band::before{content:"";position:absolute;inset:-42% -28%;z-index:-1;pointer-events:none;opacity:calc(.25 + .75*var(--k,1));
   background:radial-gradient(closest-side,rgba(20,8,6,var(--sa,.7)) 0%,rgba(20,8,6,var(--sa,.7)) 66%,rgba(20,8,6,calc(var(--sa,.7)*.5)) 86%,rgba(20,8,6,0) 100%)}
 .band .btn{text-shadow:none}
-.band.on,.band.on::before{will-change:opacity} /* only the bands on screen get their own layer */
+/* warm bands (just before, during, just after their range) get their own layers: the band, its scrim, and every
+   moving glyph, so the entrance runs on the compositor with no repaint of the shadowed text */
+.band.warm,.band.warm::before{will-change:opacity}
+.b1.warm .w,.b4.warm .w,.b2.warm .c,.b3.warm .c{will-change:transform,opacity}
+.b2.warm .band-line,.b3.warm .band-line,.b4.warm .settle-line,.b4.warm .settle-ctas{will-change:transform,opacity}
 .band-title{font-family:var(--f-display);font-weight:800;letter-spacing:-.025em;line-height:.92;font-size:clamp(3rem,7.4vw,7.6rem);max-width:11ch}
 .band-line{margin-top:18px;font-size:clamp(1.1rem,1.5vw,1.4rem);font-weight:500;max-width:34ch;text-wrap:balance}
 .band-title,.static-title,.h2{text-wrap:balance}

@@ -82,6 +82,16 @@ Changes: a small preview cut of each hero clip (466 KB / 511 KB, same keyframe d
 
 Verified: scrub on the preview, the swap under a throttled phone while scrolling (all frames on target, one video left afterwards), preview missing, both videos missing, file://, phones, reduced motion, keyboard, no JS, flick test, and 60 fps scroll on desktop and phone (4× CPU).
 
+## Caption-entry smoothness (2026-10-01)
+
+The user felt a small lag right as a caption arrived ("Birria and falafel"). `node qa/qa.mjs bandperf` (slow scroll through the hero, frame times by hero progress) confirmed slow frames clustered at band entries: in the worst baseline runs, about 39 fps during entries on both desktop and phone (4× CPU), with single stalls up to 583 ms.
+
+- Bands now warm their layers a little before they arrive (0.07 of hero progress ahead, 0.03 after): the band, its scrim, and every moving glyph get `will-change`, so layer setup never lands on the first frame of the entrance and the entrance runs on the compositor with no text repaint.
+- The phone cut is re-encoded with a keyframe every 4 frames (4.3 MB, downloaded behind the preview), halving the decode work per seek.
+- The swap now stops the preview's media pipeline before removing it and frees its blob a second later (it had been logging blob errors).
+
+After: desktop 59.4 to 60.5 fps through entries, phone (4× CPU) 59.4 to 60 fps through entries with about 0.7% of frames over 20 ms (three-run A/B for the keyframe change: 55.4 vs 59.4 fps at entries). The desktop cut stays at a keyframe every 8 frames: at 4× CPU both versions held 60 fps.
+
 ## Known limits
 
 - The video's last second still pushes in slightly; the scroll rests on the pinned end frame, so the settle reads as arriving.
