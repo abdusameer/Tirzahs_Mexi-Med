@@ -65,6 +65,23 @@ Desktop 1440×900 held 60 fps (five of six new runs at 60.0 to 60.1 with 0 to 2 
 
 Changes: hero seeks skip when the target is within half a frame (no re-decoding the same picture); hero geometry cached (no layout reads while scrolling); only on-screen bands get their own layer; parallax images and the slider move on the compositor; no backdrop blur behind the hero chip; no blend mode on the full-screen grain; two-layer text shadow; loops paused per element when offscreen; background drift off on touch screens; smaller phone versions of the Visit photo and papel picado.
 
+## Load-speed pass (2026-10-01)
+
+Measured with `QA_H2=1 node qa/qa.mjs loadtest` (empty cache, HTTP/2 like GitHub Pages; phone at 4× CPU), the live version against the new build:
+
+| | First paint | Largest paint | Scrub ready | Full quality |
+|---|---|---|---|---|
+| Phone 4G, before | 0.45 s | 0.88 s | 4.3 s | n/a |
+| Phone 4G, after | 0.45 s | 0.87 s | 1.4 s | 4.8 s |
+| Phone slow 4G, before | 0.69 s | 1.94 s | 20.7 s | n/a |
+| Phone slow 4G, after | 0.82 s | 1.81 s | 5.2 s | 23.6 s |
+| Desktop cable, before | 0.44 s | 0.52 s | 2.4 s | n/a |
+| Desktop cable, after | 0.23 s | 0.32 s | 0.45 s | 2.3 s |
+
+Changes: a small preview cut of each hero clip (466 KB / 511 KB, same keyframe density) loads first so scrubbing starts at once; the full-quality cut downloads behind it and swaps in instantly on the current frame (data-saver visitors stay on the preview; a missing preview falls back to the full file). Fonts (latin subsets) and GSAP / ScrollTrigger / Lenis are self-hosted, so the page talks to one origin instead of four. Posters are WebP (142 KB / 62 KB, from 330 / 117 KB) and declared in CSS. site.js runs before the motion libraries, so the hero starts loading without waiting for them. Preloads were tried and removed: on slow 4G they competed with the stylesheet and delayed first paint.
+
+Verified: scrub on the preview, the swap under a throttled phone while scrolling (all frames on target, one video left afterwards), preview missing, both videos missing, file://, phones, reduced motion, keyboard, no JS, flick test, and 60 fps scroll on desktop and phone (4× CPU).
+
 ## Known limits
 
 - The video's last second still pushes in slightly; the scroll rests on the pinned end frame, so the settle reads as arriving.

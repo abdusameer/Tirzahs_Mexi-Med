@@ -16,7 +16,16 @@ const report = { mode: MODE, at: new Date().toISOString(), checks: {} };
 
 /* static server */
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.mp4': 'video/mp4', '.svg': 'image/svg+xml', '.txt': 'text/plain' };
-const server = http.createServer((req, res) => {
+// QA_H2=1 serves over HTTP/2 + TLS (self-signed), like GitHub Pages, so load tests see multiplexing
+const H2 = !!process.env.QA_H2;
+let tls = null;
+if (H2) {
+  const dir = process.env.QA_TMP || os.tmpdir();
+  const key = path.join(dir, 'qa-key.pem'), cert = path.join(dir, 'qa-cert.pem');
+  if (!fs.existsSync(key)) (await import('node:child_process')).execSync(`openssl req -x509 -newkey rsa:2048 -nodes -keyout ${key} -out ${cert} -days 30 -subj /CN=127.0.0.1 2>/dev/null`);
+  tls = { key: fs.readFileSync(key), cert: fs.readFileSync(cert), allowHTTP1: true };
+}
+const handler = (req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
   if (p.endsWith('/')) p += 'index.html';
   const f = path.join(ROOT, p);
@@ -26,16 +35,18 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream', 'Content-Length': st.size });
     fs.createReadStream(f).pipe(res);
   });
-});
+};
+const server = H2 ? (await import('node:http2')).createSecureServer(tls, handler) : http.createServer(handler);
 await new Promise(r => server.listen(0, '127.0.0.1', r));
-const BASE = process.env.QA_URL || `http://127.0.0.1:${server.address().port}/`; // QA_URL checks the live site
+const BASE = process.env.QA_URL || `${H2 ? 'https' : 'http'}://127.0.0.1:${server.address().port}/`; // QA_URL checks the live site
 
 /* chrome */
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const PORT = 9300 + Math.floor(Math.random() * 400);
 const profile = fs.mkdtempSync(path.join(process.env.QA_TMP || os.tmpdir(), 'tzqa-'));
 const chrome = spawn(CHROME, ['--headless=new', ...(process.env.QA_GPU ? [] : ['--disable-gpu']), `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
-  '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', '--autoplay-policy=no-user-gesture-required', 'about:blank'], { stdio: 'ignore' });
+  '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', '--autoplay-policy=no-user-gesture-required',
+  ...(H2 ? ['--ignore-certificate-errors'] : []), 'about:blank'], { stdio: 'ignore' });
 
 async function wsUrl() {
   for (let i = 0; i < 80; i++) {
@@ -109,7 +120,10 @@ async function desktop() {
   await load();
   const vid = await waitVideo();
   const heroMode = await ev(`getComputedStyle(document.querySelector('.hero-scrub')).display`);
-  const res = { video: vid, heroScrubDisplay: heroMode, positions: {} };
+  for (let i = 0; i < 40 && !(await ev(`document.querySelector('[data-stage]').classList.contains('video-hq')`)); i++) await sleep(250);
+  await sleep(800);
+  const res = { video: vid, heroScrubDisplay: heroMode, hq: await ev(`document.querySelector('[data-stage]').classList.contains('video-hq')`),
+    videoElements: await ev(`document.querySelectorAll('[data-video]').length`), positions: {} };
   for (const p of [0, 0.12, 0.38, 0.64, 0.9, 1]) {
     const y = await heroScrollFor(p);
     await scrollToY(y, 1800);
@@ -221,10 +235,48 @@ async function reduced() {
   reducedMotion = false;
 }
 
+// swap under load: scrub the preview on a throttled phone, let the full cut swap in mid-scroll, keep scrubbing
+async function swap() {
+  reducedMotion = false;
+  await viewport(390, 844, { mobile: true, touch: true });
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, ...NETS['4g'] });
+  await load();
+  const s = await waitVideo(30000);
+  const hqNow = () => ev(`document.querySelector('[data-stage]').classList.contains('video-hq')`);
+  const res = { state: s, hqAtReady: await hqNow(), steps: [] };
+  let p = 0.05, i = 0;
+  while (i < 40) {                       // keep scrolling up and down through the hero while the full cut downloads
+    const y = await heroScrollFor(p); await scrollToY(y, 350);
+    const pr = await probe(); const hq = await hqNow();
+    res.steps.push({ p: +p.toFixed(2), t: pr.t, expect: +(p * (pr.dur - 0.05)).toFixed(2), hq, vids: await ev(`document.querySelectorAll('[data-video]').length`) });
+    if (hq && res.steps.filter(x => x.hq).length > 4) break;
+    p = p >= 0.9 ? 0.1 : p + 0.17; i++;
+  }
+  await sleep(1200);
+  const y = await heroScrollFor(0.64); await scrollToY(y, 1500);
+  res.final = await probe();
+  res.finalVideos = await ev(`document.querySelectorAll('[data-video]').length`);
+  res.consoleErrors = [...consoleErrors];
+  report.checks.swap = res;
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+}
+
+// preview missing: the loader falls back to the full-quality file
+async function nopreview() {
+  reducedMotion = false;
+  await viewport(1440, 900);
+  await cdp.send('Network.setBlockedURLs', { urls: ['*hero-preview*.mp4'] });
+  await load();
+  const s = await waitVideo(20000);
+  const y = await heroScrollFor(0.64); await scrollToY(y, 1500);
+  report.checks.nopreview = { state: s, hq: await ev(`document.querySelector('[data-stage]').classList.contains('video-hq')`), probe: await probe(), consoleErrors: [...consoleErrors] };
+  await cdp.send('Network.setBlockedURLs', { urls: [] });
+}
+
 async function novideo() {
   reducedMotion = false;
   await viewport(1440, 900);
-  await cdp.send('Network.setBlockedURLs', { urls: ['*hero-scrub.mp4'] });
+  await cdp.send('Network.setBlockedURLs', { urls: ['*hero-scrub*.mp4', '*hero-preview*.mp4'] });
   await load();
   const s = await waitVideo(8000);
   const y = await heroScrollFor(0.9); await scrollToY(y, 1500);
@@ -374,6 +426,63 @@ async function perf() {
   if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 }
 
+// load: empty cache over a throttled network. Reports first paint, largest paint, when the scrub
+// is ready (and when the full-quality cut has swapped in), bytes by type, requests, and third-party origins.
+// env: QA_W/QA_H (portrait = phone), QA_NET = slow4g | 4g | cable
+const NETS = {
+  slow4g: { latency: 150, downloadThroughput: 1.6e6 / 8, uploadThroughput: 0.75e6 / 8 },
+  '4g': { latency: 85, downloadThroughput: 9e6 / 8, uploadThroughput: 1.5e6 / 8 },
+  cable: { latency: 20, downloadThroughput: 30e6 / 8, uploadThroughput: 5e6 / 8 },
+};
+async function loadtest() {
+  reducedMotion = false;
+  const W = +(process.env.QA_W || 1440), H = +(process.env.QA_H || 900);
+  const net = process.env.QA_NET || (W < H ? '4g' : 'cable');
+  const touch = W < H;
+  await viewport(W, H, touch ? { mobile: true, touch: true } : {});
+  if (touch) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await cdp.send('Network.clearBrowserCache');
+  await cdp.send('Network.setCacheDisabled', { cacheDisabled: true });
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, ...NETS[net] });
+  const bytes = {}; const reqs = new Map(); let total = 0;
+  const h = d => {
+    if (d.method === 'Network.responseReceived') reqs.set(d.params.requestId, { url: d.params.response.url, type: d.params.type });
+    if (d.method === 'Network.loadingFinished') { const r = reqs.get(d.params.requestId); const n = d.params.encodedDataLength; total += n; if (r) { const k = r.type || 'Other'; bytes[k] = (bytes[k] || 0) + n; r.bytes = n; } }
+  };
+  cdp.on(h);
+  const { identifier } = await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: `
+    window.__lm={};
+    new PerformanceObserver(l=>l.getEntries().forEach(e=>{if(e.name==='first-contentful-paint')__lm.fcp=Math.round(e.startTime)})).observe({type:'paint',buffered:true});
+    new PerformanceObserver(l=>{const e=l.getEntries().pop();__lm.lcp=Math.round(e.startTime);__lm.lcpEl=(e.element&&(e.element.className||e.element.tagName))+' '+(e.url||'').split('/').pop()}).observe({type:'largest-contentful-paint',buffered:true});
+    document.addEventListener('DOMContentLoaded',()=>{__lm.dcl=Math.round(performance.now());
+      const st=document.querySelector('[data-stage]');if(!st)return;
+      new MutationObserver(()=>{if(st.classList.contains('video-ready')&&!__lm.ready)__lm.ready=Math.round(performance.now());if(st.classList.contains('video-hq')&&!__lm.hq)__lm.hq=Math.round(performance.now())}).observe(st,{attributes:true,attributeFilter:['class']});
+    });
+    addEventListener('load',()=>{__lm.load=Math.round(performance.now())});` });
+  requests = [];
+  await cdp.send('Page.navigate', { url: BASE });
+  const t0 = Date.now();
+  let lm = {};
+  while (Date.now() - t0 < 90000) {
+    await sleep(500);
+    try { lm = await ev('window.__lm || {}'); } catch { continue; }
+    if (lm.load && (lm.hq || (lm.ready && !(await ev('!!document.querySelector("[data-stage]")?.dataset.hasHq'))))) break;
+  }
+  await sleep(500);
+  lm = await ev('window.__lm || {}');
+  const origins = [...new Set([...reqs.values()].map(r => new URL(r.url).origin))];
+  const kb = n => Math.round(n / 1024);
+  report.checks.loadtest = { viewport: `${W}x${H}`, net, cpu: touch ? 4 : 1, firstPaintMs: lm.fcp, largestPaintMs: lm.lcp, largestPaintEl: lm.lcpEl, domReadyMs: lm.dcl, loadMs: lm.load,
+    scrubReadyMs: lm.ready, fullQualityMs: lm.hq, totalKB: kb(total), byTypeKB: Object.fromEntries(Object.entries(bytes).map(([k, v]) => [k, kb(v)])),
+    requests: reqs.size, origins, biggest: [...reqs.values()].filter(r => r.bytes).sort((a, b) => b.bytes - a.bytes).slice(0, 6).map(r => kb(r.bytes) + 'KB ' + r.url.split('/').pop().split('?')[0]),
+    consoleErrors: [...consoleErrors] };
+  cdp.handlers = cdp.handlers.filter(x => x !== h);
+  await cdp.send('Page.removeScriptToEvaluateOnNewDocument', { identifier });
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+  await cdp.send('Network.setCacheDisabled', { cacheDisabled: false });
+  if (touch) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+}
+
 // phone scrub: the 9:16 cut loads, scrubs, and every band shows in its range (390x844 touch by default)
 async function phone() {
   reducedMotion = false;
@@ -424,7 +533,7 @@ async function mtour() {
 }
 
 try {
-  const run = { desktop, flick, mobile, reduced, novideo, flip, audit, nojs, keys, file, mtour, phone, perf };
+  const run = { desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
   if (MODE === 'all') { for (const k of ['desktop', 'mobile', 'reduced', 'novideo', 'flip', 'flick', 'audit']) await run[k](); }
   else await run[MODE]();
 } catch (e) { report.error = String(e.stack || e); }

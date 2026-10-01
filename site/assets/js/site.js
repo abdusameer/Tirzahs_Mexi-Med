@@ -29,11 +29,13 @@
      HERO SCRUB
      ====================================================================== */
   // Two cuts of the same descent: 16:9 for landscape screens, 9:16 for portrait (phones, tablets held upright).
-  // Byte sizes are the fallback when Content-Length is missing.
+  // Each cut ships twice: a small preview (scrubbable in about a second) and the full-quality file that swaps in
+  // behind it. Byte sizes are the fallback when Content-Length is missing.
   const VARIANTS = {
-    land: { video: 'assets/hero-scrub.mp4', poster: 'assets/hero-poster.jpg', bytes: 6701623 },
-    port: { video: 'assets/hero-scrub-m.mp4', poster: 'assets/hero-poster-m.jpg', bytes: 3579785 }
+    land: { preview: 'assets/hero-preview.mp4', previewBytes: 466388, video: 'assets/hero-scrub.mp4', bytes: 6701623, poster: 'assets/hero-poster.webp' },
+    port: { preview: 'assets/hero-preview-m.mp4', previewBytes: 511243, video: 'assets/hero-scrub-m.mp4', bytes: 3579785, poster: 'assets/hero-poster-m.webp' }
   };
+  const SAVE_DATA = !!(navigator.connection && navigator.connection.saveData); // data saver: stay on the preview
   const PORTRAIT = matchMedia('(orientation: portrait)');
   const variantNow = () => (PORTRAIT.matches ? 'port' : 'land');
   // Static-hero gates (identical strings in site.css): phones held sideways have no room, reduced motion gets no video.
@@ -44,7 +46,7 @@
 
   const hero = $('[data-hero]');
   const stage = $('[data-stage]');
-  const video = $('[data-video]');
+  let video = $('[data-video]');   // the element being scrubbed; replaced when the full-quality cut swaps in
   const posterLayer = $('[data-poster]');
   const ring = $('[data-ring]');
   const cue = $('[data-cue]');
@@ -114,11 +116,16 @@
     lastSeek = t;
     video.currentTime = t;
   }
-  video.addEventListener('seeked', () => {
-    seekBusy = false;
-    if (pendingTime !== null) { const t = pendingTime; pendingTime = null; requestSeek(t); }
-  });
-  video.addEventListener('error', () => { seekBusy = false; pendingTime = null; failVideo(); });
+  // seek gating listens on whichever element is active; a swapped-out element is ignored
+  function bindVideo(el) {
+    el.addEventListener('seeked', () => {
+      if (el !== video) return;
+      seekBusy = false;
+      if (pendingTime !== null) { const t = pendingTime; pendingTime = null; requestSeek(t); }
+    });
+    el.addEventListener('error', () => { if (el !== video) return; seekBusy = false; pendingTime = null; failVideo(); });
+  }
+  bindVideo(video);
   const timeFor = p => p * Math.max(0, (video.duration || 0) - 0.05);
 
   function updateCaptions(p) {
@@ -165,7 +172,7 @@
     if (t < 1) requestAnimationFrame(loadRamp);
   }
 
-  let loaded = null, loadToken = 0, blobUrl = null;
+  let loaded = null, loadToken = 0, blobUrl = null, incoming = null;
 
   function initHeroOnce() {
     if (!heroInit) {
@@ -176,13 +183,16 @@
     loadVariant(variantNow());
   }
 
-  // Poster first, then the video streams in behind the ring. A newer call (rotation) cancels an older one.
+  // Poster first, then the small preview streams in behind the ring (scrubbing starts as soon as it lands),
+  // then the full-quality cut downloads quietly and swaps in on the current frame. A newer call (rotation) cancels an older one.
   function loadVariant(v) {
     if (loaded === v) return;
     loaded = v;
     const token = ++loadToken;
     const { poster } = VARIANTS[v];
-    stage.classList.remove('video-ready', 'video-failed');
+    stage.classList.remove('video-ready', 'video-failed', 'video-hq');
+    delete stage.dataset.hasHq;
+    if (incoming) { incoming.remove(); incoming = null; }
     ring.style.setProperty('--ld', 126);
     seekBusy = false; pendingTime = null; lastSeek = -1;
     posterLayer.style.backgroundImage = `url('${poster}')`;
@@ -193,50 +203,106 @@
     setTimeout(start, 4000);
   }
 
-  async function loadHeroVideo(v, token) {
-    const { video: url, bytes } = VARIANTS[v];
-    if (location.protocol === 'file:') { // double-click preview: fetch is blocked, play the file directly
-      video.src = url; video.load(); whenReady(token); ring.style.setProperty('--ld', 0); return;
-    }
+  // Streams a file into a Blob. The 20 s watchdog re-arms on every chunk; returns null if a newer load took over.
+  async function fetchBlob(url, bytes, token, onProgress) {
     const ctrl = new AbortController();
     let watchdog = setTimeout(() => ctrl.abort(), 20000);
-    const res = await fetch(url, { priority: 'low', signal: ctrl.signal });
-    if (!res.ok || !res.body) throw new Error('video ' + res.status);
-    const total = Number(res.headers.get('Content-Length')) || bytes;
-    const reader = res.body.getReader();
-    const chunks = [];
-    let got = 0, lastRing = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (token !== loadToken) { ctrl.abort(); clearTimeout(watchdog); return; }
-      clearTimeout(watchdog);
-      watchdog = setTimeout(() => ctrl.abort(), 20000);
-      chunks.push(value);
-      got += value.length;
-      const frac = Math.min(1, got / total);
-      const now = performance.now();
-      if (now - lastRing > 100 || frac === 1) { lastRing = now; ring.style.setProperty('--ld', Math.round(126 * (1 - frac))); }
+    try {
+      const res = await fetch(url, { priority: 'low', signal: ctrl.signal });
+      if (!res.ok || !res.body) throw new Error('video ' + res.status);
+      const total = Number(res.headers.get('Content-Length')) || bytes;
+      const reader = res.body.getReader();
+      const chunks = [];
+      let got = 0, lastTick = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (token !== loadToken) { ctrl.abort(); return null; }
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => ctrl.abort(), 20000);
+        chunks.push(value);
+        got += value.length;
+        const now = performance.now();
+        if (onProgress && (now - lastTick > 100 || got >= total)) { lastTick = now; onProgress(Math.min(1, got / total)); }
+      }
+      return token === loadToken ? new Blob(chunks, { type: 'video/mp4' }) : null;
+    } finally { clearTimeout(watchdog); }
+  }
+
+  // canplay, then a muted play/pause: iOS Safari only paints seeked frames after the video has played once
+  function primed(el) {
+    return new Promise(resolve => {
+      const go = () => { const p = el.play(); if (p && p.then) p.then(() => { el.pause(); resolve(); }).catch(resolve); else { el.pause(); resolve(); } };
+      if (el.readyState >= 3) go(); else el.addEventListener('canplay', go, { once: true });
+    });
+  }
+
+  async function loadHeroVideo(v, token) {
+    const V = VARIANTS[v];
+    const ringTo = f => ring.style.setProperty('--ld', Math.round(126 * (1 - f)));
+    if (location.protocol === 'file:') { // double-click preview: fetch is blocked, play the full file directly
+      video.src = V.video; video.load(); ringTo(1);
+      await primed(video);
+      if (token === loadToken) { stage.classList.add('video-ready', 'video-hq'); requestSeek(timeFor(heroProgress()), true); }
+      return;
     }
-    clearTimeout(watchdog);
-    if (token !== loadToken) return;
-    ring.style.setProperty('--ld', 0);
+    // stage 1: the preview (falls back to the full file if the preview is missing)
+    let first = null, firstIsFull = false;
+    try { first = await fetchBlob(V.preview, V.previewBytes, token, ringTo); }
+    catch { first = await fetchBlob(V.video, V.bytes, token, ringTo); firstIsFull = true; }
+    if (!first) return;
+    ringTo(1);
     const old = blobUrl;
-    blobUrl = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    blobUrl = URL.createObjectURL(first);
     video.src = blobUrl;
     if (old) URL.revokeObjectURL(old);
     video.load();
-    whenReady(token);
+    await primed(video);
+    if (token !== loadToken) return;
+    stage.classList.add('video-ready');
+    lastSeek = -1;
+    requestSeek(timeFor(heroProgress()), true);
+    if (firstIsFull) { stage.classList.add('video-hq'); return; }
+    if (SAVE_DATA) return;
+    // stage 2: the full-quality cut, swapped in on the frame the visitor is looking at
+    stage.dataset.hasHq = '1';
+    const full = await fetchBlob(V.video, V.bytes, token, null).catch(() => null);
+    if (!full || token !== loadToken) return;
+    await swapIn(full, token);
   }
-  function whenReady(token) {
-    video.addEventListener('canplay', () => {
-      if (token !== loadToken) return;
-      const reveal = () => { stage.classList.add('video-ready'); requestSeek(timeFor(heroProgress()), true); };
-      // iOS Safari only paints seeked frames after the video has played once: a muted play/pause wakes the decoder.
-      const p = video.play();
-      if (p && p.then) p.then(() => { video.pause(); reveal(); }).catch(reveal);
-      else { video.pause(); reveal(); }
-    }, { once: true });
+
+  async function swapIn(blob, token) {
+    const hi = video.cloneNode(false);
+    hi.removeAttribute('src');
+    hi.muted = true; hi.playsInline = true; hi.preload = 'auto';
+    hi.classList.add('incoming', 'snap');
+    incoming = hi;
+    video.after(hi);
+    bindVideo(hi);
+    const url = URL.createObjectURL(blob);
+    hi.src = url;
+    hi.load();
+    await primed(hi);
+    if (token !== loadToken || incoming !== hi) { hi.remove(); URL.revokeObjectURL(url); return; }
+    await new Promise(resolve => {             // land on the frame being shown right now
+      const t = timeFor(shown) * (hi.duration / (video.duration || hi.duration));
+      if (Math.abs(hi.currentTime - t) < HALF_FRAME) return resolve();
+      const done = () => resolve();
+      hi.addEventListener('seeked', done, { once: true });
+      setTimeout(done, 1500);
+      hi.currentTime = t;
+    });
+    if (token !== loadToken || incoming !== hi) { hi.remove(); URL.revokeObjectURL(url); return; }
+    // instant swap on a matching frame: the picture just sharpens (a crossfade could blend two frames mid-scroll)
+    const prev = video, prevUrl = blobUrl;
+    video = hi; blobUrl = url; incoming = null;
+    seekBusy = false; pendingTime = null; lastSeek = hi.currentTime;
+    hi.classList.remove('incoming');
+    prev.remove();
+    if (prevUrl) URL.revokeObjectURL(prevUrl);
+    requestAnimationFrame(() => hi.classList.remove('snap'));
+    stage.classList.add('video-hq');
+    onScroll(); // catch up with any scrolling that happened during the swap
   }
   function failVideo() { stage.classList.add('video-failed'); }
   PORTRAIT.addEventListener('change', () => { if (scrubOn) { loadVariant(variantNow()); onScroll(); } });
@@ -525,5 +591,6 @@
     history.replaceState(null, '', '#' + id);
   });
 
-  startMotion();
+  // the motion libraries load after this file; deferred scripts all run before DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', startMotion, { once: true });
 })();

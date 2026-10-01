@@ -1,3 +1,11 @@
+/* Self-hosted Google Fonts (SIL OFL), latin subset only */
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:700 800;font-stretch:100%;font-display:swap;src:url(../fonts/bricolage-grotesque-var-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'DM Mono';font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/dm-mono-400-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'DM Mono';font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/dm-mono-500-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Sans';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(../fonts/instrument-sans-var-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Sans';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(../fonts/instrument-sans-var-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Sans';font-style:normal;font-weight:600;font-stretch:100%;font-display:swap;src:url(../fonts/instrument-sans-var-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+
 /* Tirzahs Mexi-Terranean Grill · "Walk up to the window" (unofficial concept) */
 
 :root{
@@ -118,9 +126,15 @@ html.js .hero-static{display:none}
   html.js .hero-static{display:grid}
 }
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;color:var(--plaster-light)}
-.poster{position:absolute;inset:0;background:#5e8fd0 center/cover no-repeat}
+/* the first frame is declared here so the browser finds it as soon as the stylesheet arrives
+   (hidden stages, like the static-hero gates, never fetch it) */
+.poster{position:absolute;inset:0;background:#5e8fd0 url("../hero-poster.webp") center/cover no-repeat}
+@media (orientation: portrait){.poster{background-image:url("../hero-poster-m.webp")}}
 .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:translateZ(0);will-change:transform;transition:opacity .8s var(--ease-out)}
 .stage.video-ready .hero-video{opacity:1}
+/* the full-quality cut waits invisible until it sits on the current frame, then replaces the preview in one step */
+.stage .hero-video.incoming{opacity:0}
+.stage .hero-video.snap{transition:none}
 .stage.video-failed .hero-video{display:none}
 .scrim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 120% 90% at 50% 45%,rgba(20,8,6,0) 38%,rgba(20,8,6,.5) 100%)}
 

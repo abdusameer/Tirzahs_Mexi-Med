@@ -35,6 +35,7 @@ Dish, drink, sides, extras, soda, pop-up, window-counter, papel-picado, and bric
   model: gpt_image_2_5 (quality high, 2k; hero window at 4k). See photos/generated/PROVENANCE.md.
 
 Icons: Solar icon set (CC BY 4.0) via the Iconify API, inlined in assets/js/icons.js.
-Fonts: Bricolage Grotesque, Instrument Sans, DM Mono (Google Fonts, SIL OFL).
-Libraries: GSAP 3.12.5 + ScrollTrigger (GSAP standard license), Lenis 1.1.13 (MIT), loaded from jsDelivr.
+Fonts: Bricolage Grotesque, Instrument Sans, DM Mono (Google Fonts, SIL OFL), self-hosted latin subsets in assets/fonts.
+Libraries: GSAP 3.12.5 + ScrollTrigger (GSAP standard license), Lenis 1.1.13 (MIT), self-hosted in assets/vendor.
+Hero previews (hero-preview*.mp4): small re-encodes of the same two clips, so scrubbing starts in about a second.
 Business facts: Tirzahs' Yelp listing, menu, Q&A, and health page, read 2026-09-29.
