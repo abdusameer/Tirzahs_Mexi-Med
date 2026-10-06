@@ -135,7 +135,7 @@
       const b = bands[i];
       const f = Math.min(0.02, (b.b - b.a) / 3);
       const inO = i === 0 ? 1 : smoothstep(p, b.a, b.a + f);
-      const outO = i === n - 1 ? 1 : 1 - smoothstep(p, b.b - f, b.b);
+      const outO = b.b >= 1 ? 1 : 1 - smoothstep(p, b.b - f, b.b); // a caption that runs to the end of the film stays
       const op = Math.round(inO * outO * 1000) / 1000;
       const ramp = b.ramp || Math.min(0.025, (b.b - b.a) * 0.35);
       let k = clamp((p - b.a) / ramp, 0, 1);
@@ -579,13 +579,13 @@
 
   /* ======================================================================
      HERO STEPS: the descent plays in two steps, however hard or soft the gesture.
-     Three resting places: "Two kitchens. One window." (the opening), "Birria and falafel" (the flags, frame 0.32),
-     and "Walk up. Order at the window." with the food on the counter (the end). Two steps travel between them.
+     Two resting places: "Two kitchens. One window." (the opening) and the food on the counter (the end), where
+     "Walk up. Order at the window." (bottom left) and "Birria and falafel" (top right) share the frame. One step between them.
      The size of a wheel flick, swipe or key press is ignored; only its direction counts. The trackpad's inertia
      tail is swallowed so one flick can never carry past a stop. After the last stop the page scrolls normally.
      Needs the Lenis engine and the scrubbed hero; reduced motion, no-JS and the static hero keep native scrolling.
      ====================================================================== */
-  const HERO_STOPS = [0, 0.32, 1];         // hero progress of each resting place: opening, flags, food
+  const HERO_STOPS = [0, 1];               // hero progress of each resting place: opening, food
   const STOP_TOL = 6;                      // px: closer than this counts as "at the stop"
   const GESTURE_GAP = 180;                 // ms of wheel silence that ends a gesture
   let stepping = false, stepToken = 0;     // a step animation is running
@@ -607,7 +607,7 @@
   function stepTo(i) {
     const token = ++stepToken;
     const y = stopY(i);
-    const duration = clamp(1 + Math.abs(y - scrollY) / innerHeight * 0.45, 1.3, 2.8);
+    const duration = clamp(1 + Math.abs(y - scrollY) / innerHeight * 0.45, 1.3, 3.4);
     const done = () => { if (token === stepToken) stepping = false; };
     stepping = true;
     lenis.scrollTo(y, { duration, easing: easeInOut, lock: true, onComplete: done });

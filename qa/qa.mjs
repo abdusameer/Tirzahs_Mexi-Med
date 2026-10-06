@@ -563,7 +563,7 @@ async function mtour() {
   report.checks.mtour = { total, shots: shots.length, overflowX: await ev(`document.documentElement.scrollWidth - innerWidth`), consoleErrors: [...consoleErrors] };
 }
 
-/* hero steps: three stops (opening 0, flags 0.32, food 1), whatever the strength of the gesture */
+/* hero steps: two stops (opening 0, food 1), whatever the strength of the gesture */
 async function steps() {
   reducedMotion = false;
   const res = { desktop: {}, touch: {} };
@@ -572,48 +572,44 @@ async function steps() {
   const wheel = (dy, x = 720, y = 450) => cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x, y, deltaX: 0, deltaY: dy });
   const key = async k => { await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: k, code: k, windowsVirtualKeyCode: { ArrowDown: 40, ArrowUp: 38, PageDown: 34, ' ': 32 }[k] || 0 }); await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: k, code: k }); };
   const fresh = async () => { await load(); await waitVideo(); await ev('window.scrollTo(0,0)'); await sleep(900); };
+  const bandOps = async () => (await probe()).bands.map(b => b.op);
 
   await viewport(1440, 900);
   const D = res.desktop;
-  // 1. a feather-light flick, then a violent spin
+  const STEP = 3800;
+  // 1. a feather-light flick goes the whole way; a violent spin does the same
   await fresh();
-  await wheel(8); await sleep(2800); D.weakFirst = await where();
-  for (let i = 0; i < 40; i++) { await wheel(240); await sleep(12); } await sleep(3000); D.hardSecond = await where();
+  await wheel(8); await sleep(STEP); D.weakFlick = await where();
+  await fresh();
+  for (let i = 0; i < 40; i++) { await wheel(240); await sleep(12); } await sleep(STEP); D.hardSpin = await where();
   // 2. one more flick passes on to the page (past the hero)
   await wheel(120); await sleep(1800); D.afterLast = await where();
-  // 3. back up: from the last stop, each upward gesture goes one stop
+  // 3. back up: from the food, one upward gesture returns to the opening
   const g = await geo();
   await ev(`window.scrollTo(0, ${g.top + g.range})`); await sleep(900);
-  await wheel(-60); await sleep(2800); D.upOnce = await where();
-  await wheel(-60); await sleep(2800); D.upTwice = await where();
+  await wheel(-60); await sleep(STEP); D.upOnce = await where();
   await wheel(-60); await sleep(1200); D.upAtTop = await where();
-  // 4. a trackpad flick with a long, decaying inertia tail must not carry past the window
+  // 4. a trackpad flick with a long, decaying inertia tail must stop at the food, not carry on
   await fresh();
-  for (let i = 0; i < 90; i++) { await wheel(Math.max(1, Math.round(220 * Math.pow(0.95, i)))); await sleep(16); }
-  await sleep(3000); D.inertiaTail = await where();
-  // 5. a hard flick from the window with the tail running through the end must stop at the food
   for (let i = 0; i < 90; i++) { await wheel(Math.max(1, Math.round(300 * Math.pow(0.96, i)))); await sleep(16); }
-  await sleep(3500); D.inertiaTail2 = await where();
-  // 6. keyboard: one press = one step
+  await sleep(STEP); D.inertiaTail = await where();
+  // 5. keyboard: one press = one step
   await fresh();
-  await key('ArrowDown'); await sleep(2800); D.keyDown1 = await where();
-  await key('PageDown'); await sleep(2800); D.keyDown2 = await where();
-  await key('ArrowUp'); await sleep(2800); D.keyUp1 = await where();
-  // 7. smoothness: frame pacing and video progress while each step plays (run with QA_GPU=1 for real numbers)
+  await key('ArrowDown'); await sleep(STEP); D.keyDown = await where();
+  await key('ArrowUp'); await sleep(STEP); D.keyUp = await where();
+  // 6. smoothness: frame pacing and video progress while the step plays (run with QA_GPU=1 for real numbers)
   await fresh();
   const rec = `(()=>{const v=document.querySelector('[data-video]');window.__rec={a:[],on:true};let last=performance.now();const f=t=>{if(!window.__rec.on)return;window.__rec.a.push([t-last,v.currentTime,scrollY]);last=t;requestAnimationFrame(f)};requestAnimationFrame(f)})()`;
-  const stat = async () => ev(`(()=>{window.__rec.on=false;const a=window.__rec.a.slice(2);const dts=a.map(r=>r[0]).sort((x,y)=>x-y);const q=p=>dts[Math.min(dts.length-1,Math.floor(p*dts.length))];
+  const stat = () => ev(`(()=>{window.__rec.on=false;const a=window.__rec.a.slice(2);const dts=a.map(r=>r[0]).sort((x,y)=>x-y);const q=p=>dts[Math.min(dts.length-1,Math.floor(p*dts.length))];
     let stale=0,moving=0,maxJump=0;for(let i=1;i<a.length;i++){const dy=Math.abs(a[i][2]-a[i-1][2]);if(dy>2){moving++;if(a[i][1]===a[i-1][1])stale++;} maxJump=Math.max(maxJump,Math.abs(a[i][1]-a[i-1][1]));}
     return {frames:a.length,dtMedian:+q(.5).toFixed(1),dtP95:+q(.95).toFixed(1),dtMax:+dts[dts.length-1].toFixed(1),over25ms:dts.filter(x=>x>25).length,movingFrames:moving,staleVideoFrames:stale,maxVideoJumpSec:+maxJump.toFixed(3)}})()`);
-  await ev(rec); await wheel(100); await sleep(3200); D.smoothStep1 = await stat();
-  await ev(rec); await wheel(100); await sleep(3600); D.smoothStep2 = await stat();
-  // 8. captions at the stops
+  await ev(rec); await wheel(100); await sleep(STEP); D.smooth = await stat();
+  // 7. captions at the two stops (bands: Two kitchens, Birria and falafel, Walk up)
   await fresh();
-  await sleep(500); D.captionsOpening = (await probe()).bands.map(b => b.op); await shot('steps-opening');
-  await wheel(100); await sleep(3200); await shot('steps-flags'); D.captionsFlags = (await probe()).bands.map(b => b.op);
-  await wheel(100); await sleep(3600); await shot('steps-food'); D.captionsFood = (await probe()).bands.map(b => b.op);
+  await sleep(500); D.captionsOpening = await bandOps(); await shot('steps-opening');
+  await wheel(100); await sleep(STEP); D.captionsFood = await bandOps(); await shot('steps-food');
 
-  // touch: a short drag and a long swipe both step once
+  // touch: a short drag and a long swipe both take the one step
   const T = res.touch;
   const swipe = async (dy, ms = 120) => {
     const x = 195, y0 = dy > 0 ? 600 : 250;
@@ -623,10 +619,9 @@ async function steps() {
   };
   await viewport(390, 844, { mobile: true, touch: true });
   await fresh();
-  await swipe(40); await sleep(3000); T.shortSwipe = await where();
-  await swipe(560, 90); await sleep(3200); T.longSwipe = await where();
-  await swipe(-40); await sleep(3000); T.swipeBack = await where();
-  await shot('steps-phone-flags'); await swipe(560, 90); await sleep(3600); await shot('steps-phone-food');
+  await swipe(40); await sleep(STEP); T.shortSwipe = await where(); await shot('steps-phone-food');
+  await swipe(-40); await sleep(STEP); T.swipeBack = await where();
+  await swipe(560, 90); await sleep(STEP); T.longSwipe = await where();
   res.consoleErrors = [...consoleErrors];
   report.checks.steps = res;
 }
