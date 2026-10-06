@@ -563,8 +563,67 @@ async function mtour() {
   report.checks.mtour = { total, shots: shots.length, overflowX: await ev(`document.documentElement.scrollWidth - innerWidth`), consoleErrors: [...consoleErrors] };
 }
 
+/* hero steps: two stops (window at 0.6, food at 1), whatever the strength of the gesture */
+async function steps() {
+  reducedMotion = false;
+  const res = { desktop: {}, touch: {} };
+  const geo = () => ev(`(()=>{const h=document.querySelector('[data-hero]');return {top:h.offsetTop,range:h.offsetHeight-innerHeight}})()`);
+  const where = async () => { const g = await geo(); const y = await ev('Math.round(scrollY)'); return { y, p: +((y - g.top) / g.range).toFixed(3) }; };
+  const wheel = (dy, x = 720, y = 450) => cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x, y, deltaX: 0, deltaY: dy });
+  const key = async k => { await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: k, code: k, windowsVirtualKeyCode: { ArrowDown: 40, ArrowUp: 38, PageDown: 34, ' ': 32 }[k] || 0 }); await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: k, code: k }); };
+  const fresh = async () => { await load(); await waitVideo(); await ev('window.scrollTo(0,0)'); await sleep(900); };
+
+  await viewport(1440, 900);
+  const D = res.desktop;
+  // 1. a feather-light flick, then a violent spin
+  await fresh();
+  await wheel(8); await sleep(2800); D.weakFirst = await where();
+  for (let i = 0; i < 40; i++) { await wheel(240); await sleep(12); } await sleep(3000); D.hardSecond = await where();
+  // 2. one more flick passes on to the page (past the hero)
+  await wheel(120); await sleep(1800); D.afterLast = await where();
+  // 3. back up: from the last stop, each upward gesture goes one stop
+  const g = await geo();
+  await ev(`window.scrollTo(0, ${g.top + g.range})`); await sleep(900);
+  await wheel(-60); await sleep(2800); D.upOnce = await where();
+  await wheel(-60); await sleep(2800); D.upTwice = await where();
+  await wheel(-60); await sleep(1200); D.upAtTop = await where();
+  // 4. a trackpad flick with a long, decaying inertia tail must not carry past the window
+  await fresh();
+  for (let i = 0; i < 90; i++) { await wheel(Math.max(1, Math.round(220 * Math.pow(0.95, i)))); await sleep(16); }
+  await sleep(3000); D.inertiaTail = await where();
+  // 5. a hard flick from the window with the tail running through the end must stop at the food
+  for (let i = 0; i < 90; i++) { await wheel(Math.max(1, Math.round(300 * Math.pow(0.96, i)))); await sleep(16); }
+  await sleep(3500); D.inertiaTail2 = await where();
+  // 6. keyboard: one press = one step
+  await fresh();
+  await key('ArrowDown'); await sleep(2800); D.keyDown1 = await where();
+  await key('PageDown'); await sleep(2800); D.keyDown2 = await where();
+  await key('ArrowUp'); await sleep(2800); D.keyUp1 = await where();
+  // 7. captions at the two stops
+  await fresh();
+  await wheel(100); await sleep(3200); await shot('steps-window'); D.captionsWindow = (await probe()).bands.map(b => b.op);
+  await wheel(100); await sleep(3200); await shot('steps-food'); D.captionsFood = (await probe()).bands.map(b => b.op);
+
+  // touch: a short drag and a long swipe both step once
+  const T = res.touch;
+  const swipe = async (dy, ms = 120) => {
+    const x = 195, y0 = dy > 0 ? 600 : 250;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: y0 }] });
+    for (let i = 1; i <= 6; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y0 - dy * i / 6 }] }); await sleep(ms / 6); }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  };
+  await viewport(390, 844, { mobile: true, touch: true });
+  await fresh();
+  await swipe(40); await sleep(3000); T.shortSwipe = await where();
+  await swipe(560, 90); await sleep(3200); T.longSwipe = await where();
+  await swipe(-40); await sleep(3000); T.swipeBack = await where();
+  await shot('steps-phone-window');
+  res.consoleErrors = [...consoleErrors];
+  report.checks.steps = res;
+}
+
 try {
-  const run = { bandperf, desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
+  const run = { steps, bandperf, desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
   if (MODE === 'all') { for (const k of ['desktop', 'mobile', 'reduced', 'novideo', 'flip', 'flick', 'audit']) await run[k](); }
   else await run[MODE]();
 } catch (e) { report.error = String(e.stack || e); }

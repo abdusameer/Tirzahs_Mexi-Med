@@ -577,6 +577,99 @@
     applyHeroMode();
   });
 
+  /* ======================================================================
+     HERO STEPS: the descent plays in two steps, however hard or soft the gesture.
+     Step 1 lands on the window (frame 0.6), step 2 on the food on the counter (the end).
+     The size of a wheel flick, swipe or key press is ignored; only its direction counts. The trackpad's inertia
+     tail is swallowed so one flick can never carry past a stop. After the last stop the page scrolls normally.
+     Needs the Lenis engine and the scrubbed hero; reduced motion, no-JS and the static hero keep native scrolling.
+     ====================================================================== */
+  const HERO_STOPS = [0, 0.6, 1];          // hero progress of each resting place: opening, window, food
+  const STOP_TOL = 6;                      // px: closer than this counts as "at the stop"
+  const GESTURE_GAP = 180;                 // ms of wheel silence that ends a gesture
+  let stepping = false, stepToken = 0;     // a step animation is running
+  let wheelT = 0, wheelAbs = 0, wheelDir = 0, wheelOpen = false;
+  let touchGesture = null, keyOpen = false;
+
+  const stopY = i => heroTop + HERO_STOPS[i] * heroRange;
+  // the stop a gesture in `dir` travels to, or -1 to let the page scroll by itself
+  function stepTarget(dir) {
+    if (!lenis || !scrubOn || (sheet && !sheet.hidden)) return -1;
+    const y = scrollY, last = HERO_STOPS.length - 1;
+    if (y > stopY(last) + STOP_TOL) return -1;
+    if (dir > 0) { for (let i = 0; i <= last; i++) if (stopY(i) > y + STOP_TOL) return i; }
+    else { for (let i = last; i >= 0; i--) if (stopY(i) < y - STOP_TOL) return i; }
+    return -1;
+  }
+  const easeInOut = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  function stepTo(i) {
+    const token = ++stepToken;
+    const y = stopY(i);
+    const duration = clamp(0.9 + Math.abs(y - scrollY) / innerHeight * 0.4, 1.2, 2.2);
+    const done = () => { if (token === stepToken) stepping = false; };
+    stepping = true;
+    lenis.scrollTo(y, { duration, easing: easeInOut, lock: true, onComplete: done });
+    setTimeout(done, duration * 1000 + 500); // a newer scroll can interrupt Lenis before it reports completion
+  }
+
+  addEventListener('wheel', e => {
+    if (e.ctrlKey || !lenis || !scrubOn) return; // pinch-zoom, or stepping is off
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * innerHeight : e.deltaY;
+    if (!dy || Math.abs(e.deltaX) > Math.abs(dy)) return;
+    const now = performance.now(), abs = Math.abs(dy), dir = Math.sign(dy);
+    // a new gesture: after a pause, a change of direction, or a flick that is stronger than the inertia before it
+    const fresh = now - wheelT > GESTURE_GAP || dir !== wheelDir || abs > wheelAbs + 6;
+    wheelT = now; wheelAbs = abs; wheelDir = dir;
+    const hold = () => { e.preventDefault(); e.stopPropagation(); }; // keeps Lenis from also scrolling on this event
+    if (stepping) { hold(); return; }
+    if (!fresh && wheelOpen) { hold(); return; }       // inertia tail of the flick that just stepped
+    wheelOpen = false;
+    const i = stepTarget(dir);
+    if (i < 0) return;                                  // past the last stop (or above the first): the page scrolls normally
+    wheelOpen = true; hold(); stepTo(i);
+  }, { passive: false, capture: true });
+
+  addEventListener('touchstart', e => {
+    touchGesture = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, decided: false, mine: false, target: -1, fired: false } : null;
+  }, { passive: true });
+  addEventListener('touchmove', e => {
+    const g = touchGesture;
+    if (!g || e.touches.length !== 1) return;
+    const dx = g.x - e.touches[0].clientX, dy = g.y - e.touches[0].clientY;
+    if (!g.decided) {
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      g.decided = true;
+      if (Math.abs(dx) > Math.abs(dy)) return;          // sideways swipes belong to the menu rows and the seam
+      g.target = stepping ? -2 : stepTarget(Math.sign(dy));
+      g.mine = g.target !== -1;
+    }
+    if (!g.mine) return;
+    if (e.cancelable) e.preventDefault();               // no native momentum: the step is in charge
+    if (!g.fired && !stepping && g.target >= 0 && Math.abs(dy) > 24) { g.fired = true; stepTo(g.target); }
+  }, { passive: false });
+  addEventListener('touchend', () => {
+    const g = touchGesture; touchGesture = null;
+    // a short flick that never crossed the threshold still counts
+    if (g && g.mine && !g.fired && !stepping && g.target >= 0) stepTo(g.target);
+  }, { passive: true });
+  addEventListener('touchcancel', () => { touchGesture = null; }, { passive: true });
+
+  addEventListener('keydown', e => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || !lenis || !scrubOn) return;
+    const k = e.key;
+    const dir = k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && !e.shiftKey) ? 1
+      : k === 'ArrowUp' || k === 'PageUp' || (k === ' ' && e.shiftKey) ? -1 : 0;
+    if (!dir) return;
+    const t = e.target;
+    if (t.closest && t.closest('input, textarea, select, [role="slider"], [role="tab"], [contenteditable="true"]')) return;
+    if (k === ' ' && t.closest && t.closest('a, button, summary')) return;
+    if (stepping || (e.repeat && keyOpen)) { e.preventDefault(); return; }
+    const i = stepTarget(dir);
+    if (i < 0) return;
+    e.preventDefault(); keyOpen = true; stepTo(i);
+  });
+  addEventListener('keyup', () => { keyOpen = false; });
+
   /* in-page links: route through Lenis when it is running, then move focus for keyboard users */
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href^="#"]');
