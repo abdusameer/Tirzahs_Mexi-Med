@@ -579,12 +579,13 @@
 
   /* ======================================================================
      HERO STEPS: the descent plays in two steps, however hard or soft the gesture.
-     Step 1 lands on the window (frame 0.6), step 2 on the food on the counter (the end).
+     Three resting places: "Two kitchens. One window." (the opening), "Birria and falafel" (the flags, frame 0.32),
+     and "Walk up. Order at the window." with the food on the counter (the end). Two steps travel between them.
      The size of a wheel flick, swipe or key press is ignored; only its direction counts. The trackpad's inertia
      tail is swallowed so one flick can never carry past a stop. After the last stop the page scrolls normally.
      Needs the Lenis engine and the scrubbed hero; reduced motion, no-JS and the static hero keep native scrolling.
      ====================================================================== */
-  const HERO_STOPS = [0, 0.6, 1];          // hero progress of each resting place: opening, window, food
+  const HERO_STOPS = [0, 0.32, 1];         // hero progress of each resting place: opening, flags, food
   const STOP_TOL = 6;                      // px: closer than this counts as "at the stop"
   const GESTURE_GAP = 180;                 // ms of wheel silence that ends a gesture
   let stepping = false, stepToken = 0;     // a step animation is running
@@ -601,11 +602,12 @@
     else { for (let i = last; i >= 0; i--) if (stopY(i) < y - STOP_TOL) return i; }
     return -1;
   }
-  const easeInOut = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  // a sine ease keeps the peak speed near 1.6x the average (a cubic hits 3x), so the video seeks keep up with the scroll
+  const easeInOut = t => 0.5 - Math.cos(Math.PI * t) / 2;
   function stepTo(i) {
     const token = ++stepToken;
     const y = stopY(i);
-    const duration = clamp(0.9 + Math.abs(y - scrollY) / innerHeight * 0.4, 1.2, 2.2);
+    const duration = clamp(1 + Math.abs(y - scrollY) / innerHeight * 0.45, 1.3, 2.8);
     const done = () => { if (token === stepToken) stepping = false; };
     stepping = true;
     lenis.scrollTo(y, { duration, easing: easeInOut, lock: true, onComplete: done });

@@ -563,7 +563,7 @@ async function mtour() {
   report.checks.mtour = { total, shots: shots.length, overflowX: await ev(`document.documentElement.scrollWidth - innerWidth`), consoleErrors: [...consoleErrors] };
 }
 
-/* hero steps: two stops (window at 0.6, food at 1), whatever the strength of the gesture */
+/* hero steps: three stops (opening 0, flags 0.32, food 1), whatever the strength of the gesture */
 async function steps() {
   reducedMotion = false;
   const res = { desktop: {}, touch: {} };
@@ -599,10 +599,19 @@ async function steps() {
   await key('ArrowDown'); await sleep(2800); D.keyDown1 = await where();
   await key('PageDown'); await sleep(2800); D.keyDown2 = await where();
   await key('ArrowUp'); await sleep(2800); D.keyUp1 = await where();
-  // 7. captions at the two stops
+  // 7. smoothness: frame pacing and video progress while each step plays (run with QA_GPU=1 for real numbers)
   await fresh();
-  await wheel(100); await sleep(3200); await shot('steps-window'); D.captionsWindow = (await probe()).bands.map(b => b.op);
-  await wheel(100); await sleep(3200); await shot('steps-food'); D.captionsFood = (await probe()).bands.map(b => b.op);
+  const rec = `(()=>{const v=document.querySelector('[data-video]');window.__rec={a:[],on:true};let last=performance.now();const f=t=>{if(!window.__rec.on)return;window.__rec.a.push([t-last,v.currentTime,scrollY]);last=t;requestAnimationFrame(f)};requestAnimationFrame(f)})()`;
+  const stat = async () => ev(`(()=>{window.__rec.on=false;const a=window.__rec.a.slice(2);const dts=a.map(r=>r[0]).sort((x,y)=>x-y);const q=p=>dts[Math.min(dts.length-1,Math.floor(p*dts.length))];
+    let stale=0,moving=0,maxJump=0;for(let i=1;i<a.length;i++){const dy=Math.abs(a[i][2]-a[i-1][2]);if(dy>2){moving++;if(a[i][1]===a[i-1][1])stale++;} maxJump=Math.max(maxJump,Math.abs(a[i][1]-a[i-1][1]));}
+    return {frames:a.length,dtMedian:+q(.5).toFixed(1),dtP95:+q(.95).toFixed(1),dtMax:+dts[dts.length-1].toFixed(1),over25ms:dts.filter(x=>x>25).length,movingFrames:moving,staleVideoFrames:stale,maxVideoJumpSec:+maxJump.toFixed(3)}})()`);
+  await ev(rec); await wheel(100); await sleep(3200); D.smoothStep1 = await stat();
+  await ev(rec); await wheel(100); await sleep(3600); D.smoothStep2 = await stat();
+  // 8. captions at the stops
+  await fresh();
+  await sleep(500); D.captionsOpening = (await probe()).bands.map(b => b.op); await shot('steps-opening');
+  await wheel(100); await sleep(3200); await shot('steps-flags'); D.captionsFlags = (await probe()).bands.map(b => b.op);
+  await wheel(100); await sleep(3600); await shot('steps-food'); D.captionsFood = (await probe()).bands.map(b => b.op);
 
   // touch: a short drag and a long swipe both step once
   const T = res.touch;
@@ -617,7 +626,7 @@ async function steps() {
   await swipe(40); await sleep(3000); T.shortSwipe = await where();
   await swipe(560, 90); await sleep(3200); T.longSwipe = await where();
   await swipe(-40); await sleep(3000); T.swipeBack = await where();
-  await shot('steps-phone-window');
+  await shot('steps-phone-flags'); await swipe(560, 90); await sleep(3600); await shot('steps-phone-food');
   res.consoleErrors = [...consoleErrors];
   report.checks.steps = res;
 }
