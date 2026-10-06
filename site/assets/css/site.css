@@ -128,9 +128,9 @@ html.js .hero-static{display:none}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;color:var(--plaster-light)}
 /* the first frame is declared here so the browser finds it as soon as the stylesheet arrives
    (hidden stages, like the static-hero gates, never fetch it) */
-.poster{position:absolute;inset:0;background:#5e8fd0 url("../hero-poster.webp") center/cover no-repeat}
-@media (orientation: portrait){.poster{background-image:url("../hero-poster-m.webp")}}
-.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:translateZ(0);will-change:transform;transition:opacity .8s var(--ease-out)}
+.poster{position:absolute;inset:0;background:#5e8fd0 url("../hero-poster.webp") 50% 20%/cover no-repeat} /* 20%: on wide, short windows keep the top of the frame, so the food sits lower and the captions above it get room (CUT_POS_Y in site.js) */
+@media (orientation: portrait){.poster{background-image:url("../hero-poster-m.webp");background-position:50% 50%}.hero-video{object-position:50% 50%}} /* the tall cut is centered (CUTS.port.posY) */
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%;opacity:0;transform:translateZ(0);will-change:transform;transition:opacity .8s var(--ease-out)}
 .stage.video-ready .hero-video{opacity:1}
 /* the full-quality cut waits invisible until it sits on the current frame, then replaces the preview in one step */
 .stage .hero-video.incoming{opacity:0}
@@ -160,11 +160,13 @@ html.js .hero-static{display:none}
 .b1{top:calc(var(--nav-h) + 7vh);color:var(--text-primary);text-shadow:0 1px 0 rgba(255,246,234,.55),0 0 22px rgba(255,246,234,.6)}
 .b1::before{background:radial-gradient(closest-side,rgba(255,246,234,.5) 0%,rgba(255,246,234,.5) 62%,rgba(255,246,234,.22) 84%,rgba(255,246,234,0) 100%)}
 .b1 .band-title{font-size:clamp(3rem,6.6vw,6.8rem)}
-.b2{top:calc(var(--nav-h) + 6vh);left:auto;right:clamp(20px,16vw,260px);text-align:right;--sa:.72}
-.b2 .band-title{max-width:20ch;margin-left:auto;font-size:clamp(2.2rem,4.2vw,4.4rem)}
+/* top-right of the food frame: it lives in the strip between the nav and the top of the dishes (--rim, set by site.js),
+   and stops short of the drink on the right, so it never covers food */
+.b2{top:calc(var(--nav-h) + 4px);left:auto;right:clamp(20px,22vw,380px);text-align:right;--sa:.72}
+.b2 .band-title{max-width:20ch;margin-left:auto;line-height:.94;font-size:clamp(1.15rem,min(3.3vw,calc((var(--rim,32vh) - var(--nav-h) - 16px)/1.95)),4.4rem)}
 .b4{left:clamp(20px,6vw,96px);right:clamp(20px,6vw,96px);bottom:6vh;--sa:.74;display:grid;grid-template-columns:1fr auto;align-items:end;gap:8px 32px}
 .b4::before{inset:-60% -8% -40%}
-.b4 .band-title{grid-column:1;max-width:none}
+.b4 .band-title{grid-column:1;max-width:none;font-size:clamp(2rem,min(6vw,calc((100svh - var(--floor,58svh) - 6vh - 52px)/1.95)),6.2rem)}
 .b4 .settle-line{grid-column:1;margin-top:10px;max-width:48ch}
 .b4 .settle-ctas{grid-column:2;grid-row:1 / span 2;align-self:end;margin-top:0}
 .stage .concept-tag{left:auto;right:clamp(20px,4vw,48px);top:calc(var(--nav-h) + 14px);bottom:auto}
@@ -181,14 +183,26 @@ html.js .hero-static{display:none}
   .b1{top:calc(var(--nav-h) + 3svh)}
   .b1 .band-title{font-size:clamp(2.9rem,13.5vw,5.4rem)}
   .b2{top:calc(var(--nav-h) + 3svh);left:20px;right:20px}
-  .b2 .band-title{font-size:clamp(1.9rem,8.4vw,3.2rem);max-width:14ch}
+  .b2 .band-title{font-size:clamp(1.4rem,min(8.4vw,calc((var(--rim,45svh) - var(--nav-h) - 3svh - 20px)/2.9)),3.4rem);max-width:14ch}
   .b4{bottom:calc(4svh + env(safe-area-inset-bottom,0px));grid-template-columns:1fr}
   .b4::before{inset:-45% -12% -30%}
-  .b4 .band-title{font-size:clamp(2.9rem,13.5vw,5.4rem)}
+  .b4 .band-title{font-size:clamp(1.8rem,min(13.5vw,calc((100svh - var(--floor,62svh) - 4svh - 150px)/1.95)),5.4rem)}
   .b4 .settle-line{max-width:30ch}
   .b4 .settle-ctas{grid-column:1;grid-row:auto;margin-top:18px}
   .stage .concept-tag{right:14px;top:auto;bottom:calc(14px + env(safe-area-inset-bottom,0px))}
   .scroll-cue{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+}
+@media (orientation: portrait) and (max-height: 700px){
+  .b4{bottom:calc(42px + env(safe-area-inset-bottom,0px))} /* clears the Concept video tag */
+  .b4 .settle-ctas{margin-top:12px}
+  .b4 .band-line{font-size:.95rem;margin-top:8px}
+}
+@media (orientation: portrait) and (max-width: 360px){
+  .b4 .settle-ctas{gap:8px;flex-wrap:nowrap}
+  .b4 .settle-ctas .btn{--bh:44px;padding:0 14px;font-size:.92rem;white-space:nowrap}
+}
+@media (orientation: portrait) and (max-height: 700px){
+  .b4 .settle-line{display:none}  /* the shortest phones keep the title and the buttons, so nothing touches the food */
 }
 
 /* split text */
@@ -200,7 +214,6 @@ html.js .hero-static{display:none}
 .b4 .w{--kc:clamp(0,(var(--k,0) - var(--th,0))*2.8,1);opacity:var(--kc);transform:translateY(calc((1 - var(--kc))*34px))}
 .b4 .settle-line{--ks:clamp(0,(var(--k,0) - .62)*4,1);opacity:var(--ks);transform:translateY(calc((1 - var(--ks))*14px))}
 .b4 .settle-ctas{--kb:clamp(0,(var(--k,0) - .76)*5,1);opacity:var(--kb);transform:translateY(calc((1 - var(--kb))*14px));display:flex;flex-wrap:wrap;gap:12px}
-.b4 .band-title{font-size:clamp(3rem,6vw,6.2rem)}
 
 .ring{position:absolute;right:clamp(20px,4vw,48px);bottom:clamp(20px,5vh,48px);width:40px;height:40px;color:var(--plaster-light);transform:rotate(-90deg);transition:opacity .6s var(--ease-out)}
 .ring-fill{stroke-dashoffset:var(--ld,126)}

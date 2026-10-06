@@ -106,6 +106,21 @@
   function measureHero() {
     heroTop = hero.getBoundingClientRect().top + scrollY;
     heroRange = Math.max(1, hero.offsetHeight - stage.offsetHeight); // the stage is 100svh, so the phone toolbar never shifts progress
+    measureSafe();
+  }
+  // Where the food sits in the last frame of each cut (fractions of the frame height, measured on the files). The end-of-film
+  // captions are sized from these so words never land on a dish: --rim is the top of the food, --floor its bottom edge, in px.
+  const CUTS = {
+    land: { w: 1920, h: 1080, rim: 0.25, floor: 0.6, posY: 0.2 },   // posY = object-position y in site.css
+    port: { w: 900, h: 1600, rim: 0.47, floor: 0.675, posY: 0.5 }
+  };
+  function measureSafe() {
+    const c = CUTS[variantNow()], W = stage.clientWidth, H = stage.clientHeight;
+    if (!W || !H) return;
+    const rh = c.h * Math.max(W / c.w, H / c.h);   // object-fit: cover
+    const oy = (H - rh) * c.posY;
+    stage.style.setProperty('--rim', Math.round(c.rim * rh + oy) + 'px');
+    stage.style.setProperty('--floor', Math.round(c.floor * rh + oy) + 'px');
   }
   function heroProgress() { return clamp((scrollY - heroTop) / heroRange, 0, 1); }
 
@@ -308,7 +323,7 @@
     onScroll(); // catch up with any scrolling that happened during the swap
   }
   function failVideo() { stage.classList.add('video-failed'); }
-  PORTRAIT.addEventListener('change', () => { if (scrubOn) { loadVariant(variantNow()); onScroll(); } });
+  PORTRAIT.addEventListener('change', () => { measureSafe(); if (scrubOn) { loadVariant(variantNow()); onScroll(); } });
 
   let resizeQueued = false;
   function onResize() {

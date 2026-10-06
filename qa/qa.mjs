@@ -626,8 +626,42 @@ async function steps() {
   report.checks.steps = res;
 }
 
+/* end-of-film captions must never cover a dish: at the food stop, check the Birria (top) and Walk up (bottom) blocks
+   against the food's measured top (--rim) and bottom (--floor) on many screen shapes */
+async function safe() {
+  reducedMotion = false;
+  const sizes = [[1000, 543, false], [1280, 600, false], [1440, 778, false], [1440, 900, false], [1920, 960, false], [2560, 1080, false],
+    [768, 1024, true], [820, 1180, true], [430, 932, true], [412, 915, true], [390, 844, true], [375, 667, true], [360, 640, true], [320, 568, true]];
+  const out = [];
+  for (const [w, h, touch] of sizes) {
+    await viewport(w, h, { mobile: touch && w < 900, touch });
+    await load(); await waitVideo();
+    await ev('window.scrollTo(0,0)'); await sleep(700);
+    if (touch) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: w / 2, y: h * 0.7 }] });
+      for (let i = 1; i <= 6; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: w / 2, y: h * 0.7 - 70 * i / 6 }] }); await sleep(20); }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    } else await cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: w / 2, y: h / 2, deltaX: 0, deltaY: 100 });
+    await sleep(4200);
+    const r = await ev(`(()=>{const st=document.querySelector('[data-stage]');const cs=getComputedStyle(st);const rim=parseFloat(cs.getPropertyValue('--rim')),floor=parseFloat(cs.getPropertyValue('--floor'));
+      const top=document.querySelector('.b2 .band-title').getBoundingClientRect(), bot=document.querySelector('.b4').getBoundingClientRect(), botT=document.querySelector('.b4 .band-title').getBoundingClientRect();
+      const nav=document.querySelector('[data-nav]').getBoundingClientRect();
+      return {y:Math.round(scrollY),rim:Math.round(rim),floor:Math.round(floor),birriaTop:Math.round(top.top),birriaBottom:Math.round(top.bottom),birriaRightFrac:+(top.right/innerWidth).toFixed(2),birriaFont:Math.round(parseFloat(getComputedStyle(document.querySelector('.b2 .band-title')).fontSize)),
+        walkTop:Math.round(botT.top),blockTop:Math.round(bot.top),blockBottom:Math.round(bot.bottom),walkFont:Math.round(parseFloat(getComputedStyle(document.querySelector('.b4 .band-title')).fontSize)),navBottom:Math.round(nav.bottom),
+        overflowX:document.documentElement.scrollWidth-innerWidth}})()`);
+    r.size = `${w}x${h}`;
+    r.birriaClearOfFood = r.birriaBottom <= r.rim + 2;
+    r.birriaBelowNav = r.birriaTop >= r.navBottom - 2;
+    r.walkClearOfFood = r.blockTop >= r.floor - 2;
+    r.walkFits = r.blockBottom <= h + 1;
+    out.push(r);
+    await shot(`safe-${w}x${h}`);
+  }
+  report.checks.safe = out;
+}
+
 try {
-  const run = { steps, bandperf, desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
+  const run = { safe, steps, bandperf, desktop, flick, mobile, reduced, novideo, nopreview, swap, flip, audit, nojs, keys, file, mtour, phone, perf, loadtest };
   if (MODE === 'all') { for (const k of ['desktop', 'mobile', 'reduced', 'novideo', 'flip', 'flick', 'audit']) await run[k](); }
   else await run[MODE]();
 } catch (e) { report.error = String(e.stack || e); }
